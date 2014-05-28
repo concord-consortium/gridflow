@@ -7,7 +7,7 @@ var canvas = new fabric.Canvas('main-canvas'),
     externalTown2 = new fabric.Rect({ left: width-10, top: 200, height: 100, width: 10, fill: '#0FF',  _centerX: width-5, _centerY: 250, selectable: false}),
     solarLine = new fabric.Rect({ left: 0, top: height-25, height: 15, width: width/2, fill: '#F55', selectable: false}),
     windLine = new fabric.Rect({ left: width/2, top: height-25, height: 15, width: width/2, fill: '#55F', selectable: false}),
-    handle = new fabric.Rect({ left: width/2-6, top: height-35, height: 30, width: 12, fill: '#000', lockScalingX: true, lockScalingY: true, lockMovementY: true, hasBorders: false, hasControls: false});
+    handle = new fabric.Rect({ left: width/2-10, top: height-45, height: 40, width: 20, fill: '#000', lockScalingX: true, lockScalingY: true, lockMovementY: true, hasBorders: false, hasControls: false});
 
 
 
