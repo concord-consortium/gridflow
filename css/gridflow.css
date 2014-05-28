@@ -1,0 +1,17 @@
+#image-container, #canvas-container {
+  position: absolute;
+  left: 50px;
+  top: 50px;
+  width: 500px;
+  height: 700px;
+}
+
+#sprite-container {
+  display: none;
+}
+
+button {
+  position: relative;
+  top: -44px;
+  left: 300px;
+}

@@ -1,0 +1,8 @@
+{
+  "name": "gridflow",
+  "version": "0.0.1",
+  "main": "public/app.js",
+  "dependencies": {
+     "fabric": "1.4.5"
+    }
+}
