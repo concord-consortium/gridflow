@@ -188,7 +188,13 @@ mainLoop = function() {
                 { duration: 1100,
                   onComplete: function() {
                     // middle of the target pipe
-                    target = town;
+                    var target,
+                        r = Math.random();
+                    if (r < Math.min(percentOpen2, 1) - 0.1){
+                      target = externalTown2;
+                    } else {
+                      target = town;
+                    }
                     loc = getRandLoc(target[0]);
                     joulie.animate({top: loc.y, left: loc.x},
                       { easing: fabric.util.ease.easeOutSine,
