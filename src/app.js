@@ -16,19 +16,28 @@ function getCookie() {
     return null;
 }
 
+function getRandLoc(box) {
+  var x = box.minX + (Math.random() * (box.maxX - box.minX)),
+      y = box.minY + (Math.random() * (box.maxY - box.minY));
+  return {x: x, y: y};
+}
+
 setCookie(0);
 
 var canvas = new fabric.Canvas('main-canvas'),
     width = 500,
     height = 700,
-    joulies = [],
-    town = { },
-    externalTown1 = { },
-    externalTown2 = { },
+    town = [ {minX: 225, maxX: 245, minY: 180, maxY: 190}, {minX: 235, maxX: 235, minY: 140, maxY: 140} ],
+    externalTown1 = [ {minX: 140, maxX: 170, minY: 360, maxY: 360}, {minX: -10, maxX: -10, minY: 370, maxY: 370} ],
+    externalTown2 = [ {minX: 330, maxX: 330, minY: 360, maxY: 360}, {minX: 510, maxX: 510, minY: 370, maxY: 370} ],
+    solarEntry = {minX: 85, maxX: 190, minY: 620, maxY: 620},
+    coalEntry =  {minX: 300, maxX: 370, minY: 620, maxY: 620},
+    pipeBottom = {minX: 235, maxX: 235, minY: 500, maxY: 520},
+    pipeCenter = {minX: 220, maxX: 250, minY: 350, maxY: 390},
     percentOpen1 = 0,
     percentOpen2 = 0,
-    handle1 = new fabric.Rect({ left: 90, top: 340, height: 80, width: 35, fill: '#AAA', stroke: 'black', strokeWidth: 3, lockScalingX: true, lockScalingY: true, lockMovementX: true, hasBorders: false, hasControls: false}),
-    handle2 = new fabric.Rect({ left: 360, top: 340, height: 80, width: 35, fill: '#AAA', stroke: 'black', strokeWidth: 3, lockScalingX: true, lockScalingY: true, lockMovementX: true, hasBorders: false, hasControls: false});
+    handle1 = new fabric.Rect({ left: 145, top: 340, height: 80, width: 35, fill: '#CCE', stroke: 'black', strokeWidth: 3, lockScalingX: true, lockScalingY: true, lockMovementX: true, hasBorders: false, hasControls: false}),
+    handle2 = new fabric.Rect({ left: 300, top: 340, height: 80, width: 35, fill: '#CCE', stroke: 'black', strokeWidth: 3, lockScalingX: true, lockScalingY: true, lockMovementX: true, hasBorders: false, hasControls: false});
 
 
 canvas.add(handle1);
@@ -44,8 +53,8 @@ canvas.on('object:moving', function(e) {
   } else if (handle.top < 340) {
     handle.top = 340;
   }
-  if (handle.top > 380) {
-    percentOpen = (handle.top - 375)/25;
+  if (handle.top > 370) {
+    percentOpen = (handle.top - 365)/25;
   } else {
     percentOpen = 0;
   }
@@ -68,51 +77,50 @@ canvas.renderAll();
 if (!window2) {
 mainLoop = function() {
   if (Math.random() < 0.2) {
-    var left = 100 + Math.random() * (width-200),
+    var isSolar = Math.random() < 0.5,
         joulie;
-    if (left < 250) {
-      joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(255, 50, 50)').toHex(), stroke: 'black', top: height-25, left: left, selectable: false, _rgb: 50, _solar: true });
+    if (isSolar) {
+      loc = getRandLoc(solarEntry);
+      joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(50, 50, 255)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _solar: true });
     } else {
-      joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(50, 50, 255)').toHex(), stroke: 'black', top: height-25, left: left, selectable: false, _rgb: 50, _solar: false });
+      loc = getRandLoc(coalEntry);
+      joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(255, 50, 50)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _solar: false });
     }
     canvas.add(joulie);
 
     canvas.sendToBack(joulie);
 
-    leftOffset = 3-(Math.random() * 6);
-
     // bottom of the bottom pipe
-    joulie.animate({top: 520, left: 235+leftOffset},
+    loc = getRandLoc(pipeBottom);
+    joulie.animate({top: loc.y, left: loc.x},
       { easing: fabric.util.ease.easeInSine,
         duration: 3000,
         onChange: function() {
           _rgb = Math.min(joulie.get('_rgb') + 1, 220);
           if (joulie.get('_solar')) {
-            joulie.set({fill: new fabric.Color('rgb(255, '+_rgb+', '+_rgb+')').toHex(), _rgb: _rgb});
-          } else {
             joulie.set({fill: new fabric.Color('rgb('+_rgb+', '+_rgb+', 255)').toHex(), _rgb: _rgb});
+          } else {
+            joulie.set({fill: new fabric.Color('rgb(255, '+_rgb+', '+_rgb+')').toHex(), _rgb: _rgb});
           }
         },
-        onComplete: function(){return function() {
-          // top of the bottom pipe
-          leftOffset = 10-(Math.random() * 20);
-          topOffset = 5-(Math.random() * 10);
-          joulie.animate({top: 490+topOffset, left: 235+leftOffset},
-            { easing: fabric.util.ease.easeOutSine,
-              duration: 500,
+        onComplete: function() {
+          // center
+          loc = getRandLoc(pipeCenter);
+          joulie.animate({top: loc.y, left: loc.x},
+            { duration: 1100,
               onChange: function() {
                 _rgb = Math.min(joulie.get('_rgb') + 1, 220);
                 if (joulie.get('_solar')) {
-                  joulie.set({fill: new fabric.Color('rgb(255, '+_rgb+', '+_rgb+')').toHex(), _rgb: _rgb});
-                } else {
                   joulie.set({fill: new fabric.Color('rgb('+_rgb+', '+_rgb+', 255)').toHex(), _rgb: _rgb});
+                } else {
+                  joulie.set({fill: new fabric.Color('rgb(255, '+_rgb+', '+_rgb+')').toHex(), _rgb: _rgb});
                 }
               },
               onComplete: function() {
-                // center of the chamber
+                // middle of the target pipe
                 var target,
                     r = Math.random();
-                if (r < Math.min((percentOpen1 + percentOpen2), 1) - 0.04){
+                if (r < Math.min((percentOpen1 + percentOpen2), 1) - 0.1){
                   p1 = percentOpen1 * (1/(percentOpen1 + percentOpen2));
                   if (Math.random() < p1) {
                     target = externalTown1;
@@ -122,58 +130,22 @@ mainLoop = function() {
                 } else {
                   target = town;
                 }
-                if (target == town) {
-                  _left = 235+(100-(Math.random() * 200));
-                  _top = 340+(50-(Math.random() * 100));
-                } else if (target == externalTown1) {
-                  _left = 190+(40-(Math.random() * 80));
-                  _top = 440+(40-(Math.random() * 80));
-                } else {
-                  _left = 280+(40-(Math.random() * 80));
-                  _top = 440+(40-(Math.random() * 80));
-                }
-                joulie.animate({top: _top, left: _left},
-                  { easing: fabric.util.ease.easeInSine,
-                    duration: 1200,
+                loc = getRandLoc(target[0]);
+                joulie.animate({top: loc.y, left: loc.x},
+                  { easing: fabric.util.ease.easeOutSine,
+                    duration: 1000,
                     onComplete: function() {
-                      // bottom of the top pipe
-                      if (target == town) {
-                        _left = 235+(10-(Math.random() * 20));
-                        _top = 190;
-                      } else if (target == externalTown1) {
-                        _left = 140+(10-(Math.random() * 20));
-                        _top = handle1.get('_targetY')-8;
-                      } else {
-                        _left = 330+(10-(Math.random() * 20));
-                        _top = handle2.get('_targetY')-8;
-                      }
-                      joulie.animate({top: _top, left: _left},
-                        { easing: fabric.util.ease.easeOutSine,
-                          duration: 1900,
+                      // end of the target pipe
+                      loc = getRandLoc(target[1]);
+                      joulie.animate({top: loc.y, left: loc.x},
+                        { easing: fabric.util.ease.easeInSine,
+                          duration: 900,
                           onComplete: function() {
-                            // top of the top pipe
-                            if (target == town) {
-                              _left = 235;
-                              _top = 140;
-                            } else if (target == externalTown1) {
-                              _left = 0;
-                              _top = 380;
-                            } else {
-                              _left = 490;
-                              _top = 380;
+                            if (target ==externalTown2) {
+                              total = 1 * getCookie();
+                              setCookie(total+1);
                             }
-                            joulie.animate({top: _top, left: _left},
-                              { easing: fabric.util.ease.easeInSine,
-                                duration: 900,
-                                onComplete: function() {
-                                  if (target ==externalTown2) {
-                                    total = 1 * getCookie();
-                                    setCookie(total+1);
-                                  }
-                                  canvas.remove(joulie);
-                                }
-                              }
-                            );
+                            canvas.remove(joulie);
                           }
                         }
                       );
@@ -181,10 +153,10 @@ mainLoop = function() {
                   }
                 );
               }
-            });
-        }}()
+            }
+          );
+        }
       });
-    joulies.push(joulie);
   }
 
 
@@ -196,56 +168,71 @@ mainLoop = function() {
     var numjoulies = 1 * getCookie();
     setCookie(0);
 
-    while (numjoulies-- > 0) {
-      joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(255, 255, 255)').toHex(), stroke: 'black', top: 380, left: 0, selectable: false, _rgb: 50, _solar: false });
+    if (numjoulies) {
+      loc = getRandLoc(externalTown1[1]);
+      joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(255, 255, 255)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _solar: false });
       canvas.add(joulie);
 
       canvas.sendToBack(joulie);
 
-      _left = 140+(10-(Math.random() * 20));
-      _top = handle1.get('_targetY')-8;
-      joulie.animate({top: _top, left: _left},
-      { easing: fabric.util.ease.easeInSine,
-        duration: 3000,
-        onComplete: function() { return function() {
-          // center of the chamber
-          _left2 = 235+(100-(Math.random() * 200));
-          _top2 = 340+(50-(Math.random() * 100));
-          joulie.animate({top: _top2, left: _left2},
-            { easing: fabric.util.ease.easeInSine,
-              duration: 1200,
-              onComplete: function() {
-                // bottom of the top pipe
-                  _left = 235+(10-(Math.random() * 20));
-                  _top = 190;
-                joulie.animate({top: _top, left: _left},
-                  { easing: fabric.util.ease.easeOutSine,
-                    duration: 1900,
-                    onComplete: function() {
-                      // top of the top pipe
-                        _left = 235;
-                        _top = 140;
-                      joulie.animate({top: _top, left: _left},
-                        { easing: fabric.util.ease.easeInSine,
-                          duration: 900,
-                          onComplete: function() {
-                            canvas.remove(joulie);
-                          }
+      (function(joulie) {
+        if (percentOpen1 > 0.5) {
+          loc = getRandLoc(externalTown1[0]);
+          joulie.animate({top: loc.y, left: loc.x},
+          { easing: fabric.util.ease.easeOutSine,
+            duration: 2000,
+            onComplete: function() {
+              // center
+              loc = getRandLoc(pipeCenter);
+              joulie.animate({top: loc.y, left: loc.x},
+                { duration: 1100,
+                  onComplete: function() {
+                    // middle of the target pipe
+                    target = town;
+                    loc = getRandLoc(target[0]);
+                    joulie.animate({top: loc.y, left: loc.x},
+                      { easing: fabric.util.ease.easeOutSine,
+                        duration: 2000,
+                        onComplete: function() {
+                          // end of the target pipe
+                          loc = getRandLoc(target[1]);
+                          joulie.animate({top: loc.y, left: loc.x},
+                            { easing: fabric.util.ease.easeInSine,
+                              duration: 900,
+                              onComplete: function() {
+                                canvas.remove(joulie);
+                              }
+                            }
+                          );
                         }
-                      );
-                    }
+                      }
+                    );
                   }
-                );
-              }
+                }
+              );
             }
-          );
-        }}()
-
-
-      });
+          });
+        } else {
+          loc = getRandLoc({minX: 40, maxX: 90, minY: 365, maxY: 370});
+          joulie.animate({top: loc.y, left: loc.x},
+          { easing: fabric.util.ease.easeOutElastic,
+            duration: 4000,
+            onComplete: function() {
+              loc = getRandLoc({minX: -10, maxX: 60, minY: 360, maxY: 380});
+              joulie.animate({top: loc.y, left: loc.x},
+                { duration: 1000,
+                  onComplete: function() {
+                    canvas.remove(joulie);
+                  }
+                }
+              );
+            }
+          });
+        }
+      })(joulie);
     }
     canvas.renderAll();
   }
 }
 
-setInterval(mainLoop, 50);
+setInterval(mainLoop, 100);
