@@ -21,11 +21,17 @@ var canvas = new fabric.Canvas('main-canvas'),
     arrivedFromLeft = 0,
     arrivedFromRight = 0,
     initialized = false,
+    toTop = 0,
+    toLeft = 0,
+    toRight = 0,
+    townName,
+    townNumber,
     datastore;
 
 
 if(window.location.hash) {
   townName = window.location.hash.substr(1);
+  townNumber = 1 * /.$/.exec(townName)[0]
   datastore = new DataStore(townName);
   datastore.init(function() {
     initialized = true;
@@ -103,15 +109,25 @@ addJoulie = function(origin) {
               // middle of the target pipe
               var target,
                   r = Math.random();
-              if (r < Math.min((percentOpen1 + percentOpen2), 1) - 0.1){
-                p1 = percentOpen1 * (1/(percentOpen1 + percentOpen2));
-                if (Math.random() < p1) {
+              if (datastore) {
+                if (r < toTop) {
+                  target = town;
+                } else if (r < toTop + toLeft) {
                   target = leftTown;
                 } else {
                   target = rightTown;
                 }
               } else {
-                target = town;
+                if (r < Math.min((percentOpen1 + percentOpen2), 1) - 0.1){
+                  p1 = percentOpen1 * (1/(percentOpen1 + percentOpen2));
+                  if (Math.random() < p1) {
+                    target = leftTown;
+                  } else {
+                    target = rightTown;
+                  }
+                } else {
+                  target = town;
+                }
               }
               loc = getRandLoc(target[1]);
               joulie.animate({top: loc.y, left: loc.x},
@@ -143,24 +159,54 @@ addJoulie = function(origin) {
     });
 }
 
+solveFlowNetwork = function(data) {
+  var edges = [[1,2,3],[0,4,5,6],[0,4,5,6],[0,4,5,6],[1,2,3,7],[1,2,3,7],[1,2,3,7],[4,5,6]],
+      capacity = [], i, j, flow;
+  for (i = 0; i < 8; i++) {
+    capacity[i] = [];
+    for (j = 0; j < 8; j++) {
+      capacity[i][j] = Infinity;
+    }
+  }
+
+  capacity[0][1] = capacity[1][0] = data.town1.powerProduction;
+  capacity[0][2] = capacity[2][0] = data.town2.powerProduction;
+  capacity[0][3] = capacity[3][0] = data.town3.powerProduction;
+
+  capacity[4][7] = capacity[7][4] = data.town1.powerNeed;
+  capacity[5][7] = capacity[7][5] = data.town2.powerNeed;
+  capacity[6][7] = capacity[7][6] = data.town3.powerNeed;
+
+  flow = edmondsKarp(edges, capacity, 0, 7).flow;
+
+  leftNode = townNumber == 1 ? 6 : townNumber + 2;
+  rightNode = townNumber == 3 ? 4 : townNumber + 4;
+
+  _toTop   = Math.max(flow[townNumber][townNumber+3], 0);
+  _toLeft  = Math.max(flow[townNumber][leftNode]    , 0);
+  _toRight = Math.max(flow[townNumber][rightNode]   , 0);
+  sum = _toTop + _toLeft + _toRight;
+  toTop   = _toTop / sum;
+  toLeft  = _toLeft / sum;
+  toRight = _toRight / sum;
+}
+
 mainLoop = function() {
   if (Math.random() < 0.2) {
     var origin = Math.random() < 0.5 ? solarEntry : coalEntry;
     addJoulie(origin);
   }
   if (datastore && initialized) {
-    datastore.readIncoming(function(direction, number) {
-      if (direction == "left") {
-        while (arrivedFromLeft < number) {
-          addJoulie(leftTown);
-          arrivedFromLeft++;
-        }
-      } else {
-        while (arrivedFromRight < number) {
-          addJoulie(rightTown);
-          arrivedFromRight++;
-        }
+    datastore.update(function(val) {
+      while (arrivedFromLeft < val.fromLeft) {
+        addJoulie(leftTown);
+        arrivedFromLeft++;
       }
+      while (arrivedFromRight < val.fromRight) {
+        addJoulie(rightTown);
+        arrivedFromRight++;
+      }
+      solveFlowNetwork(val);
     });
   }
 

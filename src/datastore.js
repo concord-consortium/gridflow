@@ -1,3 +1,40 @@
+if (typeof Firebase == "undefined") {
+  DataObj = {
+    val: function() {
+      return {
+        "town1" : {
+          "powerProduction" : 10,
+          "powerNeed" : 8,
+          "town2" : 0,
+          "town3" : 0
+        },
+        "town2" : {
+          "powerProduction" : 5,
+          "powerNeed" : 8,
+          "town1" : 0,
+          "town3" : 0
+        },
+        "town3" : {
+          "powerProduction" : 5,
+          "powerNeed" : 8,
+          "town1" : 0,
+          "town2" : 0
+        }
+      }
+    }
+  }
+  Firebase = function() {}
+
+  Firebase.prototype = {
+    update: function(_, callback) {
+      if (callback) callback();
+    },
+    once: function(_, callback) {
+      if (callback) callback(DataObj);
+    }
+  }
+}
+
 var townTopology = {
   'town1': {left: 'town3', right: 'town2'},
   'town2': {left: 'town1', right: 'town3'},
@@ -7,6 +44,7 @@ var townTopology = {
 var fbUrl = 'https://cc-gridflow.firebaseio.com';
 
 var fbRefs = {
+  'top': new Firebase(fbUrl),
   'town1': new Firebase(fbUrl + '/town1'),
   'town2': new Firebase(fbUrl + '/town2'),
   'town3': new Firebase(fbUrl + '/town3')
@@ -45,43 +83,13 @@ DataStore.prototype = {
     fbRefs[this.townName].update(updateObj);
   },
 
-  readIncoming: function (callback) {
-    var incoming = {left: 0, right: 0};
-    fbRefs[this.left].child(this.townName).once('value', function(snapshot) {
-      callback('left', snapshot.val());
-    });
-
-    fbRefs[this.right].child(this.townName).once('value', function(snapshot) {
-      callback('right', snapshot.val());
+  update: function (callback) {
+    _this = this;
+    fbRefs.top.once('value', function(snapshot) {
+      var data = snapshot.val();
+      data.fromLeft = data[_this.left][_this.townName];
+      data.fromRight = data[_this.right][_this.townName];
+      callback(data);
     });
   }
 }
-
-
-
-
-/** FireBase DB Schema
-
-{
-  "town1" : {
-    "powerProduction" : 0,
-    "powerNeed" : 0,
-    "toTown2" : 0,
-    "toTown3" : 0
-  },
-  "town3" : {
-    "prowerProduction" : 0,
-    "powerNeed" : 0,
-    "toTown2" : 0,
-    "toTown1" : 0
-  },
-  "town2" : {
-    "powerProduction" : 0,
-    "powerNeed" : 0,
-    "toTown1" : 0,
-    "toTown3" : 0
-  }
-}
-
-*/
-
