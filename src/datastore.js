@@ -43,18 +43,21 @@ var townTopology = {
 
 var fbUrl = 'https://cc-gridflow.firebaseio.com';
 
-var fbRefs = {
-  'top': new Firebase(fbUrl),
-  'town1': new Firebase(fbUrl + '/town1'),
-  'town2': new Firebase(fbUrl + '/town2'),
-  'town3': new Firebase(fbUrl + '/town3')
-};
-
-DataStore = function(townName) {
+DataStore = function(worldName, townName) {
+  this.worldName = worldName;
   this.townName = townName;
   this.left  = townTopology[townName].left;
   this.right = townTopology[townName].right;
   this.model = {};
+
+  worldUrl = fbUrl+'/'+worldName;
+
+  this.fbRefs = {
+    'top': new Firebase(worldUrl),
+    'town1': new Firebase(worldUrl + '/town1'),
+    'town2': new Firebase(worldUrl + '/town2'),
+    'town3': new Firebase(worldUrl + '/town3')
+  }
 }
 
 DataStore.prototype = {
@@ -69,39 +72,39 @@ DataStore.prototype = {
     initializationObj[this.left+"Capacity"] = 0;
     initializationObj[this.right+"Capacity"] = 0;
 
-    fbRefs[this.townName].update(initializationObj);
+    this.fbRefs[this.townName].update(initializationObj);
     this.model = initializationObj;
 
     resetFromValues = {};
     resetFromValues[this.townName] = 0;
-    fbRefs[this.left].update(resetFromValues);
-    fbRefs[this.right].update(resetFromValues, callback);
+    this.fbRefs[this.left].update(resetFromValues);
+    this.fbRefs[this.right].update(resetFromValues, callback);
   },
 
   setProduction: function (val) {
     this.model.powerProduction = val;
-    fbRefs[this.townName].update({powerProduction: val});
+    this.fbRefs[this.townName].update({powerProduction: val});
   },
 
   setNeed: function (val) {
     this.model.powerNeed = val;
-    fbRefs[this.townName].update({powerNeed: val});
+    this.fbRefs[this.townName].update({powerNeed: val});
   },
 
   setCapacity: function (direction, val) {
-    fbRefs[this.townName].child(this[direction]+"Capacity").set(val);
+    this.fbRefs[this.townName].child(this[direction]+"Capacity").set(val);
   },
 
   add: function (direction) {
     var key = this[direction];
     this.model[key]++;
     updateObj = {}; updateObj[key] = this.model[key];
-    fbRefs[this.townName].update(updateObj);
+    this.fbRefs[this.townName].update(updateObj);
   },
 
   update: function (callback) {
     _this = this;
-    fbRefs.top.once('value', function(snapshot) {
+    this.fbRefs.top.once('value', function(snapshot) {
       var data = snapshot.val();
       _this.model[_this.left] = data[_this.townName][_this.left];
       _this.model[_this.right] = data[_this.townName][_this.left];

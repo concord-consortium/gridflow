@@ -31,8 +31,9 @@ var canvas = new fabric.Canvas('main-canvas'),
 
 if(window.location.hash) {
   townName = window.location.hash.substr(1);
-  townNumber = 1 * /.$/.exec(townName)[0]
-  datastore = new DataStore(townName);
+  townNumber = 1 * /.$/.exec(townName)[0];
+  worldName = window.prompt("What's the name of your island?","");
+  datastore = new DataStore(worldName, townName);
   datastore.init(function() {
     initialized = true;
 
