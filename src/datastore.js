@@ -103,6 +103,8 @@ DataStore.prototype = {
     _this = this;
     fbRefs.top.once('value', function(snapshot) {
       var data = snapshot.val();
+      _this.model[_this.left] = data[_this.townName][_this.left];
+      _this.model[_this.right] = data[_this.townName][_this.left];
       data.fromLeft = data[_this.left][_this.townName];
       data.fromRight = data[_this.right][_this.townName];
       callback(data);
