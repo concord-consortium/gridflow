@@ -5,6 +5,17 @@ function getRandLoc(box) {
   return {x: x, y: y};
 }
 
+Math.nrand = function() {
+  var x1, x2, rad, y1;
+  do {
+    x1 = 2 * this.random() - 1;
+    x2 = 2 * this.random() - 1;
+    rad = x1 * x1 + x2 * x2;
+  } while(rad >= 1 || rad == 0);
+  var c = this.sqrt(-2 * Math.log(rad) / rad);
+  return x1 * c;
+};
+
 var canvas = new fabric.Canvas('main-canvas'),
     width = 500,
     height = 700,
@@ -18,12 +29,20 @@ var canvas = new fabric.Canvas('main-canvas'),
     percentOpenRight = 0,
     handle1 = new fabric.Rect({ left: 145, top: 340, height: 80, width: 35, fill: '#CCE', stroke: 'black', strokeWidth: 3, lockScalingX: true, lockScalingY: true, lockMovementX: true, hasBorders: false, hasControls: false}),
     handle2 = new fabric.Rect({ left: 300, top: 340, height: 80, width: 35, fill: '#CCE', stroke: 'black', strokeWidth: 3, lockScalingX: true, lockScalingY: true, lockMovementX: true, hasBorders: false, hasControls: false}),
+    sun = new fabric.Circle({ top: 50, left: 50, radius: 20, fill: '#eee400', stroke: 'white', selectable: false}),
+    factory = new fabric.Rect({ left: 250, top: 600, height: 100, width: 150, fill: 'rgba(0,0,0,0)', selectable: false}),
+    coalPile = [],
+    maxCoal = 30,
     arrivedFromLeft = 0,
     arrivedFromRight = 0,
     initialized = false,
     toTop = 0,
     toLeft = 0,
     toRight = 0,
+    time = 0,
+    timeStep = 0.01,
+    coalProduction = 0,
+    twoPi = Math.PI * 2,
     townName,
     townNumber,
     datastore;
@@ -43,10 +62,26 @@ if(window.location.hash) {
   });
 }
 
+addCoal = function() {
+  if (coalPile.length > maxCoal) return;
+  x = 425 + (Math.nrand() * 15);
+  y = 685 + -Math.abs((Math.nrand() * 8));
+  coal = new fabric.Circle({ top: y, left: x, radius: 5, fill: '#333', stroke: 'black', selectable: false});
+  canvas.add(coal);
+  coalPile.push(coal);
+}
+
+
 canvas.add(handle1);
 canvas.add(handle2);
+canvas.add(sun);
+canvas.add(factory);
 
-canvas.setBackgroundImage('images/gridflowpipes.png');
+for (i = 0; i < maxCoal; i++){
+  addCoal();
+}
+
+canvas.setBackgroundImage('images/gridflowpipes-dawn.png');
 
 canvas.on('object:moving', function(e) {
   var handle = e.target;
@@ -72,6 +107,14 @@ canvas.on('object:moving', function(e) {
     if (datastore) {
       datastore.setCapacity('right', percentOpen*10)
     }
+  }
+});
+
+canvas.on('mouse:down', function(e) {
+  var obj = e.target;
+  // simple bounding
+  if (obj == factory) {
+    coalProduction = 28;
   }
 });
 
@@ -207,11 +250,45 @@ solveFlowNetwork = function(data) {
   toRight = _toRight / sum;
 }
 
+setTimeOfDay = function() {
+  angle = time * twoPi / 4;
+  sun.set({left: 215 + (-180*Math.cos(angle)), top: 100 + (-110*Math.sin(angle))});
+  sun.clipTo = function (ctx) {
+    ctx.rect(-30, -30, 60, 70 + (90 * Math.sin(angle)));
+  }
+  if (time == 3.6) {
+    canvas.setBackgroundImage('images/gridflowpipes-dawn.png');
+  } else if (time == 0.3) {
+    canvas.setBackgroundImage('images/gridflowpipes-day.png');
+  } else if (time == 1.7) {
+    canvas.setBackgroundImage('images/gridflowpipes-dusk.png');
+  } else if (time == 2.4) {
+    canvas.setBackgroundImage('images/gridflowpipes-night.png');
+  }
+}
+
 mainLoop = function() {
-  productionChance = (townName == 'town3') ? 0.05 : 0.2;
-  if (Math.random() < productionChance) {
-    var origin = Math.random() < 0.5 ? solarEntry : coalEntry;
-    addJoulie(origin);
+  time = (Math.round(100*(time + timeStep))/100) % 4;
+  setTimeOfDay();
+  coalProduction = Math.max(coalProduction - 1, 0);
+  solarProductionChance = 0.3 * Math.sin(time * twoPi / 4);
+  if ((Math.abs(Math.floor(time*10) - (time / 0.1))) < 0.01) {
+    addCoal();
+  }
+  if (Math.random() < solarProductionChance+0.1) {
+    addJoulie(solarEntry);
+  }
+  if ((coalProduction > 0 && coalProduction % 3 == 0)) {
+    coal = coalPile.pop();
+    if (coal) {
+      (function(coal){
+        coal.animate({left: 350, top: 650}, {duration: 350,
+          onComplete: function() {
+            canvas.remove(coal);
+            addJoulie(coalEntry);
+          }});
+      })(coal);
+    }
   }
   if (datastore && initialized) {
     datastore.update(function(val) {
