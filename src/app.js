@@ -214,6 +214,8 @@ mainLoop = function() {
   }
   if (datastore && initialized) {
     datastore.update(function(val) {
+      if (val.fromLeft < arrivedFromLeft) arrivedFromLeft = 0;
+      if (val.fromRight < arrivedFromRight) arrivedFromRight = 0;
       while (arrivedFromLeft < val.fromLeft) {
         addJoulie(leftTown);
         arrivedFromLeft++;
