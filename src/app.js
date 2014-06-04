@@ -14,8 +14,8 @@ var canvas = new fabric.Canvas('main-canvas'),
     solarEntry = [ {minX: 85, maxX: 190, minY: 620, maxY: 620}, {minX: 235, maxX: 235, minY: 500, maxY: 520} ],
     coalEntry =  [ {minX: 300, maxX: 370, minY: 620, maxY: 620}, {minX: 235, maxX: 235, minY: 500, maxY: 520} ],
     pipeCenter = {minX: 220, maxX: 250, minY: 350, maxY: 390},
-    percentOpen1 = 0,
-    percentOpen2 = 0,
+    percentOpenLeft = 0,
+    percentOpenRight = 0,
     handle1 = new fabric.Rect({ left: 145, top: 340, height: 80, width: 35, fill: '#CCE', stroke: 'black', strokeWidth: 3, lockScalingX: true, lockScalingY: true, lockMovementX: true, hasBorders: false, hasControls: false}),
     handle2 = new fabric.Rect({ left: 300, top: 340, height: 80, width: 35, fill: '#CCE', stroke: 'black', strokeWidth: 3, lockScalingX: true, lockScalingY: true, lockMovementX: true, hasBorders: false, hasControls: false}),
     arrivedFromLeft = 0,
@@ -35,6 +35,10 @@ if(window.location.hash) {
   datastore = new DataStore(townName);
   datastore.init(function() {
     initialized = true;
+
+    if (townName == 'town3') {
+      datastore.setProduction(2);
+    }
   });
 }
 
@@ -58,9 +62,15 @@ canvas.on('object:moving', function(e) {
   }
   handle.set('_targetY', 363 + (handle.top - 363) / 2);
   if (handle == handle1) {
-    percentOpen1 = percentOpen;
+    percentOpenLeft = percentOpen;
+    if (datastore) {
+      datastore.setCapacity('left', percentOpen*10)
+    }
   } else {
-    percentOpen2 = percentOpen;
+    percentOpenRight = percentOpen;
+    if (datastore) {
+      datastore.setCapacity('right', percentOpen*10)
+    }
   }
 });
 
@@ -118,8 +128,8 @@ addJoulie = function(origin) {
                   target = rightTown;
                 }
               } else {
-                if (r < Math.min((percentOpen1 + percentOpen2), 1) - 0.1){
-                  p1 = percentOpen1 * (1/(percentOpen1 + percentOpen2));
+                if (r < Math.min((percentOpenLeft + percentOpenRight), 1) - 0.1){
+                  p1 = percentOpenLeft * (1/(percentOpenLeft + percentOpenRight));
                   if (Math.random() < p1) {
                     target = leftTown;
                   } else {
@@ -169,6 +179,10 @@ solveFlowNetwork = function(data) {
     }
   }
 
+
+  leftNode = townNumber == 1 ? 6 : townNumber + 2;
+  rightNode = townNumber == 3 ? 4 : townNumber + 4;
+
   capacity[0][1] = capacity[1][0] = data.town1.powerProduction;
   capacity[0][2] = capacity[2][0] = data.town2.powerProduction;
   capacity[0][3] = capacity[3][0] = data.town3.powerProduction;
@@ -177,10 +191,11 @@ solveFlowNetwork = function(data) {
   capacity[5][7] = capacity[7][5] = data.town2.powerNeed;
   capacity[6][7] = capacity[7][6] = data.town3.powerNeed;
 
-  flow = edmondsKarp(edges, capacity, 0, 7).flow;
+  capacity[1][5] = capacity[2][4] = Math.min(data.town1.town2Capacity, data.town2.town1Capacity);
+  capacity[1][6] = capacity[3][4] = Math.min(data.town1.town3Capacity, data.town3.town1Capacity);
+  capacity[2][6] = capacity[3][5] = Math.min(data.town2.town3Capacity, data.town3.town2Capacity);
 
-  leftNode = townNumber == 1 ? 6 : townNumber + 2;
-  rightNode = townNumber == 3 ? 4 : townNumber + 4;
+  flow = edmondsKarp(edges, capacity, 0, 7).flow;
 
   _toTop   = Math.max(flow[townNumber][townNumber+3], 0);
   _toLeft  = Math.max(flow[townNumber][leftNode]    , 0);
@@ -192,7 +207,8 @@ solveFlowNetwork = function(data) {
 }
 
 mainLoop = function() {
-  if (Math.random() < 0.2) {
+  productionChance = (townName == 'town3') ? 0.05 : 0.2;
+  if (Math.random() < productionChance) {
     var origin = Math.random() < 0.5 ? solarEntry : coalEntry;
     addJoulie(origin);
   }

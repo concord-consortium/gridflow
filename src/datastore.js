@@ -61,11 +61,13 @@ DataStore.prototype = {
 
   init: function (callback) {
     var initializationObj = {
-      powerProduction: 0,
-      powerNeed: 0
+      powerProduction: 7,
+      powerNeed: 7
     };
     initializationObj[this.left] = 0;
     initializationObj[this.right] = 0;
+    initializationObj[this.left+"Capacity"] = 0;
+    initializationObj[this.right+"Capacity"] = 0;
 
     fbRefs[this.townName].update(initializationObj);
     this.model = initializationObj;
@@ -74,6 +76,20 @@ DataStore.prototype = {
     resetFromValues[this.townName] = 0;
     fbRefs[this.left].update(resetFromValues);
     fbRefs[this.right].update(resetFromValues, callback);
+  },
+
+  setProduction: function (val) {
+    this.model.powerProduction = val;
+    fbRefs[this.townName].update({powerProduction: val});
+  },
+
+  setNeed: function (val) {
+    this.model.powerNeed = val;
+    fbRefs[this.townName].update({powerNeed: val});
+  },
+
+  setCapacity: function (direction, val) {
+    fbRefs[this.townName].child(this[direction]+"Capacity").set(val);
   },
 
   add: function (direction) {
