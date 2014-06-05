@@ -43,6 +43,8 @@ var canvas = new fabric.Canvas('main-canvas'),
     timeStep = 0.01,
     coalProduction = 0,
     twoPi = Math.PI * 2,
+    totalProduced = 0,
+    productionCounter = 16,
     townName,
     townNumber,
     datastore;
@@ -55,10 +57,6 @@ if(window.location.hash) {
   datastore = new DataStore(worldName, townName);
   datastore.init(function() {
     initialized = true;
-
-    if (townName == 'town3') {
-      datastore.setProduction(2);
-    }
   });
 }
 
@@ -227,17 +225,17 @@ solveFlowNetwork = function(data) {
   leftNode = townNumber == 1 ? 6 : townNumber + 2;
   rightNode = townNumber == 3 ? 4 : townNumber + 4;
 
-  capacity[0][1] = capacity[1][0] = data.town1.powerProduction;
-  capacity[0][2] = capacity[2][0] = data.town2.powerProduction;
-  capacity[0][3] = capacity[3][0] = data.town3.powerProduction;
+  capacity[0][1] = capacity[1][0] = data.town1.powerProduction || 10;
+  capacity[0][2] = capacity[2][0] = data.town2.powerProduction || 10;
+  capacity[0][3] = capacity[3][0] = data.town3.powerProduction || 10;
 
-  capacity[4][7] = capacity[7][4] = data.town1.powerNeed;
-  capacity[5][7] = capacity[7][5] = data.town2.powerNeed;
-  capacity[6][7] = capacity[7][6] = data.town3.powerNeed;
+  capacity[4][7] = capacity[7][4] = data.town1.powerNeed || 10;
+  capacity[5][7] = capacity[7][5] = data.town2.powerNeed || 10;
+  capacity[6][7] = capacity[7][6] = data.town3.powerNeed || 10;
 
-  capacity[1][5] = capacity[2][4] = Math.min(data.town1.town2Capacity, data.town2.town1Capacity);
-  capacity[1][6] = capacity[3][4] = Math.min(data.town1.town3Capacity, data.town3.town1Capacity);
-  capacity[2][6] = capacity[3][5] = Math.min(data.town2.town3Capacity, data.town3.town2Capacity);
+  capacity[1][5] = capacity[2][4] = Math.min(data.town1.town2Capacity, data.town2.town1Capacity) || 0;
+  capacity[1][6] = capacity[3][4] = Math.min(data.town1.town3Capacity, data.town3.town1Capacity) || 0;
+  capacity[2][6] = capacity[3][5] = Math.min(data.town2.town3Capacity, data.town3.town2Capacity) || 0;
 
   flow = edmondsKarp(edges, capacity, 0, 7).flow;
 
@@ -272,11 +270,13 @@ mainLoop = function() {
   setTimeOfDay();
   coalProduction = Math.max(coalProduction - 1, 0);
   solarProductionChance = 0.3 * Math.sin(time * twoPi / 4);
+  if (townName == 'town3') solarProductionChance -= 0.1;
   if ((Math.abs(Math.floor(time*10) - (time / 0.1))) < 0.01) {
     addCoal();
   }
   if (Math.random() < solarProductionChance+0.1) {
     addJoulie(solarEntry);
+    totalProduced++;
   }
   if ((coalProduction > 0 && coalProduction % 3 == 0)) {
     coal = coalPile.pop();
@@ -288,7 +288,14 @@ mainLoop = function() {
             addJoulie(coalEntry);
           }});
       })(coal);
+      totalProduced++;
     }
+  }
+  productionCounter--;
+  if (datastore && productionCounter == 0) {
+    productionCounter = 16;
+    datastore.setProduction(totalProduced);
+    totalProduced = 0;
   }
   if (datastore && initialized) {
     datastore.update(function(val) {
