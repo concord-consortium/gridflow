@@ -50,7 +50,7 @@ var canvas = new fabric.Canvas('main-canvas'),
     productionCounter = 16,
     frownyFaces = 0,
     frownyText = null,
-    frownyBuffer = 2,
+    frownyBuffer = 3,
     townName,
     townNumber,
     datastore;
@@ -292,7 +292,7 @@ addJoulie = function(origin) {
                     gap._targeted = true;
                     (function(gap){
                       joulie.animate({top: gap.top+converyorSpeed, left: gap.left},
-                        { duration: 200,
+                        { duration: 250,
                           onComplete: function() {
                             gap._filled = joulie;
                             joulie.top = gap.top+2;
@@ -396,8 +396,10 @@ setTimeOfDay = function() {
     canvas.setBackgroundImage('images/gridflowpipes-dawn.png');
   } else if (time == 0.3) {
     canvas.setBackgroundImage('images/gridflowpipes-day.png');
+    converyorSpeed = 3.2;
   } else if (time == 1.7) {
     canvas.setBackgroundImage('images/gridflowpipes-dusk.png');
+    converyorSpeed = 2;
   } else if (time == 2.4) {
     canvas.setBackgroundImage('images/gridflowpipes-night.png');
   }
