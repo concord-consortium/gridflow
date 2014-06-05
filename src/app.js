@@ -397,11 +397,14 @@ setTimeOfDay = function() {
   } else if (time == 0.3) {
     canvas.setBackgroundImage('images/gridflowpipes-day.png');
     converyorSpeed = 3.2;
+  } else if (time == 1.0) {
+    converyorSpeed = 4.5;
   } else if (time == 1.7) {
     canvas.setBackgroundImage('images/gridflowpipes-dusk.png');
-    converyorSpeed = 2;
+    converyorSpeed = 2.5;
   } else if (time == 2.4) {
     canvas.setBackgroundImage('images/gridflowpipes-night.png');
+    converyorSpeed = 2;
   }
 }
 
