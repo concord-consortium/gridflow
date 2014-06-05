@@ -33,6 +33,9 @@ var canvas = new fabric.Canvas('main-canvas'),
     factory = new fabric.Rect({ left: 250, top: 600, height: 100, width: 150, fill: 'rgba(0,0,0,0)', selectable: false}),
     coalPile = [],
     maxCoal = 30,
+    converyor = new fabric.Rect({ left: 230, top: 130, height: 170, width: 26, fill: '#b4d1d2', stroke: 'black', selectable: false}),
+    gaps = [],
+    converyorSpeed = 2,
     arrivedFromLeft = 0,
     arrivedFromRight = 0,
     initialized = false,
@@ -45,6 +48,9 @@ var canvas = new fabric.Canvas('main-canvas'),
     twoPi = Math.PI * 2,
     totalProduced = 0,
     productionCounter = 16,
+    frownyFaces = 0,
+    frownyText = null,
+    frownyBuffer = 2,
     townName,
     townNumber,
     datastore;
@@ -69,11 +75,107 @@ addCoal = function() {
   coalPile.push(coal);
 }
 
+powerShortageCount = 0;
+
+powerTexts = [
+  new fabric.Text("We need power!", { left: 290, top: 50, angle: 20, fill: '#F00', fontSize: 19, shadow: 'rgba(0,0,0,0.4) 0 0 5px', selectable: false}),
+  new fabric.Text("We need power!", { left: 90, top: 50, angle: -20, fill: '#F00', fontSize: 19, shadow: 'rgba(0,0,0,0.4) 0 0 5px', selectable: false}),
+  new fabric.Text("We need power!", { left: 110, top: 70, angle: -7, fill: '#F00', fontSize: 22, shadow: 'rgba(0,0,0,0.4) 0 0 5px', selectable: false})
+]
+
+addFrownyFace = function() {
+  if (frownyBuffer) {
+    frownyBuffer--;
+    return;
+  };
+  if (!frownyFaces) {
+    frowny = new fabric.Image(document.getElementById('frowny'), {
+      left: 400,
+      top: 10
+    });
+    frownyText = new fabric.Text("0", { left: 450, top: 14, angle: 0, fontSize: 20, fill: '#F00', selectable: false});
+    canvas.add(frowny);
+    canvas.add(frownyText);
+  }
+  frownyFaces++;
+  frownyText.text = ""+frownyFaces;
+}
+
+powerShortage = function() {
+  if (powerShortageCount < powerTexts.length) {
+    canvas.add(powerTexts[powerShortageCount++]);
+  } else {
+    addFrownyFace();
+  }
+}
+
+regainPower = function() {
+  canvas.remove(powerTexts[--powerShortageCount]);
+}
+
+createGaps = function() {
+  for (i = 0; i < 8; i++) {
+    var top = 134 + (i * 25);
+    gap = new fabric.Circle({ top: top, left: 235, radius: 9, fill: '#666', stroke: 'white', selectable: false, _targeted: false, _filled: null});
+    canvas.add(gap);
+    gaps.push(gap);
+  }
+}
+
+cropGaps = function() {
+  var top = gaps[0].top - 130;
+  gaps[0].clipTo = function (ctx) {
+    ctx.rect(-10, -9-top, 20, 30);
+  }
+
+  var bottom = gaps[6].top - 282;
+  gaps[6].clipTo = function (ctx) {
+    ctx.rect(-10, -10, 20, 18-bottom);
+  }
+
+  _bottom = gaps[7].top - 282;
+  gaps[7].clipTo = function (ctx) {
+    ctx.rect(-10, -10, 20, 18-_bottom);
+  }
+}
+
+moveGaps = function() {
+  for (i in gaps) {
+    gaps[i].top -= converyorSpeed;
+    if (gaps[i]._filled) {
+      gaps[i]._filled.top = gaps[i].top + 2;
+    }
+  }
+  if (gaps[0].top < 112) {
+    gap = gaps.shift();
+
+    if (gap._filled) {
+      if (powerShortageCount) {
+        regainPower();
+      }
+      canvas.remove(gap._filled);
+      gap._filled = null;
+    } else {
+      powerShortage();
+    }
+    gap._targeted = false;
+
+    gaps.push(gap);
+    gap.top = gaps[6].top + 25;
+  }
+  cropGaps();
+}
+
 
 canvas.add(handle1);
 canvas.add(handle2);
 canvas.add(sun);
 canvas.add(factory);
+canvas.add(converyor);
+
+createGaps();
+cropGaps();
+
 
 for (i = 0; i < maxCoal; i++){
   addCoal();
@@ -121,15 +223,16 @@ canvas.renderAll();
 addJoulie = function(origin) {
   loc = getRandLoc(origin[0]);
   if (origin == solarEntry) {
-    joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(50, 50, 255)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _origin: origin });
+    joulie = new fabric.Circle({ radius: 7, fill: new fabric.Color('rgb(50, 50, 255)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _origin: origin });
   } else if (origin == coalEntry) {
-    joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(255, 50, 50)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _origin: origin });
+    joulie = new fabric.Circle({ radius: 7, fill: new fabric.Color('rgb(255, 50, 50)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _origin: origin });
   } else {
-    joulie = new fabric.Circle({ radius: 8, fill: new fabric.Color('rgb(255, 255, 255)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _origin: origin });
+    joulie = new fabric.Circle({ radius: 7, fill: new fabric.Color('rgb(255, 255, 255)').toHex(), stroke: 'black', top: loc.y, left: loc.x, selectable: false, _rgb: 50, _origin: origin });
   }
   canvas.add(joulie);
 
-  canvas.sendToBack(joulie);
+  //canvas.sendBackwards(joulie);
+  canvas.sendToBack(converyor);
 
   // start of the origin pipe
   loc = getRandLoc(origin[1]);
@@ -181,29 +284,64 @@ addJoulie = function(origin) {
                   target = town;
                 }
               }
-              loc = getRandLoc(target[1]);
-              joulie.animate({top: loc.y, left: loc.x},
-                { easing: fabric.util.ease.easeOutSine,
-                  duration: 1000,
-                  onComplete: function() {
-                    // end of the target pipe
-                    loc = getRandLoc(target[0]);
-                    joulie.animate({top: loc.y, left: loc.x},
-                      { easing: fabric.util.ease.easeInSine,
-                        duration: 900,
-                        onComplete: function() {
-                          if (datastore && target == leftTown) {
-                            datastore.add('left');
-                          } else if (datastore && target == rightTown) {
-                            datastore.add('right');
+              if (target == town) {
+                success = false;
+                for (i in gaps) {
+                  gap = gaps[i];
+                  if (gap.top > 134 && gap.top < 305 && !gap._targeted) {
+                    gap._targeted = true;
+                    (function(gap){
+                      joulie.animate({top: gap.top+converyorSpeed, left: gap.left},
+                        { duration: 200,
+                          onComplete: function() {
+                            gap._filled = joulie;
+                            joulie.top = gap.top+2;
+                            joulie.left = gap.left+2;
                           }
-                          canvas.remove(joulie);
                         }
-                      }
-                    );
+                      );
+                    })(gap);
+                    success = true;
+                    break
                   }
                 }
-              );
+                if (!success) {
+                  // dissipate
+                  loc = getRandLoc({minX: 330, maxX: 380, minY: 190, maxY: 260})
+                  joulie.animate({top: loc.y, left: loc.x},
+                    { easing: fabric.util.ease.easeInSine,
+                      duration: 2100,
+                      onComplete: function() {
+                        canvas.remove(joulie);
+                      }
+                    }
+                  );
+                }
+              } else {
+                loc = getRandLoc(target[1]);
+                joulie.animate({top: loc.y, left: loc.x},
+                  { easing: fabric.util.ease.easeOutSine,
+                    duration: 1000,
+                    onComplete: function() {
+                      // end of the target pipe
+                      loc = getRandLoc(target[0]);
+                      joulie.animate({top: loc.y, left: loc.x},
+                        { easing: fabric.util.ease.easeInSine,
+                          duration: 900,
+                          onComplete: function() {
+                            if (datastore && target == leftTown) {
+                              datastore.add('left');
+                            } else if (datastore && target == rightTown) {
+                              datastore.add('right');
+                            }
+                            canvas.remove(joulie);
+                          }
+                        }
+                      );
+                    }
+                  }
+                );
+              }
             }
           }
         );
@@ -268,6 +406,7 @@ setTimeOfDay = function() {
 mainLoop = function() {
   time = (Math.round(100*(time + timeStep))/100) % 4;
   setTimeOfDay();
+  moveGaps();
   coalProduction = Math.max(coalProduction - 1, 0);
   solarProductionChance = 0.3 * Math.sin(time * twoPi / 4);
   if (townName == 'town3') solarProductionChance -= 0.1;
