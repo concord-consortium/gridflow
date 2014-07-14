@@ -5,5 +5,3 @@ exports.config =
       joinTo: 'app.js'
     stylesheets:
       joinTo: 'app.css'
-    templates:
-      joinTo: 'app.js'

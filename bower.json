@@ -2,6 +2,8 @@
   "name": "gridflow",
   "version": "0.0.1",
   "main": "public/app.js",
-  "dependencies": {},
+  "dependencies": {
+    "pixi": "~1.6.0"
+  },
   "overrides": {}
 }
