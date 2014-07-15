@@ -6,4 +6,9 @@ body{
   top: 0;
   bottom: 0;
   overflow: hidden;
+  text-align: center;
+  background-color: black;
+}
+canvas{
+  height: 100%;
 }
