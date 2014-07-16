@@ -25,7 +25,7 @@ module.exports = function (gameState, stage) {
   this.container.addChild(this.statusText);
   this.statusText.position.set(400, 0);
 
-  this.placeholderText = new PIXI.Text("INSERT COOL PAIRING\nSCREEN HERE", {
+  this.placeholderText = new PIXI.Text("INSERT COOL JOINING\nSCREEN HERE", {
     font: "normal 50pt Arial",
     fill: "#525252"
   });
@@ -70,7 +70,7 @@ module.exports.prototype.render = function () {
       }
     }
     if (this.gameState.host === true) {
-      if (ready >= total && total >= 2) {
+      if (true /*ready >= total && total >= 2*/ ) {
         if (this.gameState.globals.playing === false) {
           this.gameState.globals.playing = true;
           this.gameState.globals.startTime = Date.now();
@@ -86,6 +86,10 @@ module.exports.prototype.render = function () {
     // Otherwise, continue rendering
     if (this.gameState.cityId != undefined) {
       this.readyButton.visible = true;
+      this.cityText.setStyle({
+        font: "normal 50pt Arial",
+        fill: this.gameState.CITY_COLORS[this.gameState.cityId].toString(16)
+      });
     }
     this.cityText.setText(this.gameState.cityId == undefined ? "" : "City " + (this.gameState.cityId + 1));
     this.statusText.setText(this.gameState.cityId == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready");
@@ -93,11 +97,19 @@ module.exports.prototype.render = function () {
       if (this.gameState.globals.status === true) {
         this.blackoutRectangle.clear();
         this.placeholderText.setText("YOU WIN!!!!!")
+        this.placeholderText.setStyle({
+          font: "normal 50pt Arial",
+          fill: "#0fb45c"
+        });
       } else {
         this.blackoutRectangle.beginFill(0x000000);
         this.blackoutRectangle.drawRect(0, 0, 854, 1280);
         this.blackoutRectangle.endFill();
         this.placeholderText.setText("City " + (this.gameState.globals.status + 1) + " BLACKED OUT.");
+        this.placeholderText.setStyle({
+          font: "normal 50pt Arial",
+          fill: this.gameState.CITY_COLORS[this.gameState.globals.status].toString(16)
+        });
       }
       this.readyButton.setText("AGAIN");
     }

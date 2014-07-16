@@ -24,9 +24,21 @@ module.exports = function () {
   // Constants
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
-  // Length of day in milliseconds
-  this.DAY_LENGTH = 3 * 1000;
+  // Time is all in milliseconds
+  this.ENERGY_SEND_LENGTH = 10 * 1000;
+  this.DAY_LENGTH = 60 * 1000;
   this.WIN_AFTER = 5 * this.DAY_LENGTH;
+  this.ENERGY_COLOR = 0xfff36a;
+  this.MISSING_ENERGY_COLOR = 0xff0000;
+  this.EXTRA_ENERGY_COLOR = 0x00c617;
+  this.ENERGY_COLOR = 0xfff36a;
+  this.MAX_ENERGY = 12;
+  this.CITY_COLORS = [
+    0xffa701,
+    0x42c355,
+    0x358de5,
+    0x9b2ed4
+  ];
 };
 // Connect to an island
 module.exports.prototype.connect = function () {
@@ -61,7 +73,7 @@ module.exports.prototype.connect = function () {
       this.firebase.child(this.cityId).onDisconnect().set(null);
       for (i = 0; i < this.MAX_CITIES; i++) {
         if (i !== this.cityId) {
-          this.addCityListener(i);
+          addCityListener.call(this, i);
         }
       }
       this.resetCity();
@@ -84,21 +96,21 @@ module.exports.prototype.syncCity = function () {
   this.hasUpdated = true;
 }
 // Listen for changes in the other cities
-module.exports.prototype.addCityListener = function (city) {
-  this.firebase.child(city).on("value", function (data) {
-    this.sync[city] = data.val();
-    if (city === 0) {
-      this.globals = this.sync[0].globals;
-    }
-    if (this.sync[0] == undefined) {
-      // Host disconnected!
-      console.error("Host disconnected!");
-      this.firebase.off();
-    }
-    this.hasUpdated = true;
-  }, this);
-}
-// Resets the city for the beginning of a game
+var addCityListener = function (city) {
+    this.firebase.child(city).on("value", function (data) {
+      this.sync[city] = data.val();
+      if (city === 0) {
+        this.globals = this.sync[0].globals;
+      }
+      if (this.sync[0] == undefined) {
+        // Host disconnected!
+        console.error("Host disconnected!");
+        this.firebase.off();
+      }
+      this.hasUpdated = true;
+    }, this);
+  }
+  // Resets the city for the beginning of a game
 module.exports.prototype.resetCity = function (status) {
   // Set up the city
   this.currentCity = this.sync[this.cityId] = {
@@ -114,9 +126,37 @@ module.exports.prototype.resetCity = function (status) {
     this.globals = this.currentCity.globals = {
       // startTime is also used as an indicator of playing/not playing
       "playing": false,
-      "startTIme": null,
+      "startTime": null,
       // A cityId if a city blacked out, or true on win.
-      "status": status === undefined ? null : status
+      "status": status === undefined ? null : status,
+      "timeOffset": [
+        Math.random(),
+        Math.random(),
+        Math.random(),
+        Math.random()
+      ],
+      // Energy sources and their max production
+      "supply": [
+        {
+          "wind": 4 + 2 * Math.random()
+        },
+        {
+          "solar": 3 + 2 * Math.random()
+        },
+        {
+          "fossil": 6 + 2 * Math.random()
+        },
+        {
+          "solar": 3 + 2 * Math.random()
+        }
+      ],
+      // Average demand
+      "demand": [
+        3 + 2 * Math.random(),
+        2 + 2 * Math.random(),
+        5 + 2 * Math.random(),
+        2 + 2 * Math.random()
+      ],
     }
   }
   this.hasUpdated = true;

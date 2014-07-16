@@ -1,5 +1,4 @@
-var BarChart = require("components/BarChart"),
-  GameState = require("GameState"),
+var GameState = require("core/GameState"),
   Join = require("scenes/Join"),
   Play = require("scenes/Play");
 
