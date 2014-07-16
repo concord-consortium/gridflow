@@ -14,39 +14,36 @@ module.exports = function (gameState, stage) {
 
   this.cityText = new PIXI.Text("", {
     font: "normal 50pt Arial",
-    fill: "525252"
+    fill: "#525252"
   });
   this.container.addChild(this.cityText);
 
   this.statusText = new PIXI.Text("", {
     font: "normal 30pt Arial",
-    fill: "525252"
+    fill: "#525252"
   });
   this.container.addChild(this.statusText);
   this.statusText.position.set(400, 0);
 
   this.placeholderText = new PIXI.Text("INSERT COOL PAIRING\nSCREEN HERE", {
     font: "normal 50pt Arial",
-    fill: "525252"
+    fill: "#525252"
   });
   this.container.addChild(this.placeholderText);
   this.placeholderText.position.set(10, 500);
 
   this.readyButton = new PIXI.Text("READY", {
     font: "normal 100pt Arial",
-    fill: "525252"
+    fill: "#525252"
   });
+  this.readyButton.visible = false;
   this.container.addChild(this.readyButton);
   this.readyButton.position.set(200, 1000);
   this.readyButton.interactive = true;
   var that = this;
   this.readyButton.mousedown =
     this.readyButton.touchstart = function () {
-      that.readyButton.setStyle({
-        font: "normal 100pt Arial",
-        fill: "green"
-      });
-      if (that.gameState.currentCity != undefined) {
+      if (that.gameState.currentCity != undefined && that.gameState.globals != undefined && that.gameState.globals.playing === false) {
         that.gameState.currentCity.ready = true;
         that.gameState.syncCity();
       }
@@ -54,11 +51,7 @@ module.exports = function (gameState, stage) {
   this.readyButton.mouseup =
     this.readyButton.touchend =
     this.readyButton.mouseout = function () {
-      that.readyButton.setStyle({
-        font: "normal 100pt Arial",
-        fill: "#525252"
-      });
-      if (that.gameState.currentCity != undefined) {
+      if (that.gameState.currentCity != undefined && that.gameState.globals != undefined && that.gameState.globals.playing === false) {
         that.gameState.currentCity.ready = false;
         that.gameState.syncCity();
       }
@@ -68,7 +61,6 @@ module.exports = function (gameState, stage) {
 module.exports.prototype.render = function () {
   "use strict";
   if (this.gameState.hasUpdated) {
-    // Start the game if everyone is ready
     var ready = 0,
       total = this.gameState.countCities(),
       i;
@@ -78,34 +70,42 @@ module.exports.prototype.render = function () {
       }
     }
     if (this.gameState.host === true) {
-      if (ready >= total) {
-        if (this.gameState.globals.startTime == null) {
-          this.gameState.globals.startTime = Date.now() + 500;
+      if (ready >= total && total >= 2) {
+        if (this.gameState.globals.playing === false) {
+          this.gameState.globals.playing = true;
+          this.gameState.globals.startTime = Date.now();
           this.gameState.syncCity();
         }
-      } else if (this.gameState.globals.startTime != null) {
-        this.gameState.globals.startTime = null;
-        this.gameState.syncCity();
       }
     }
+    // Start the game if everyone is ready
+    if (this.gameState.globals != undefined && this.gameState.globals.playing === true) {
+      this.gameState.startTime = Math.min(Date.now(), this.gameState.globals.startTime);
+      return "play";
+    }
     // Otherwise, continue rendering
+    if (this.gameState.cityId != undefined) {
+      this.readyButton.visible = true;
+    }
     this.cityText.setText(this.gameState.cityId == undefined ? "" : "City " + (this.gameState.cityId + 1));
     this.statusText.setText(this.gameState.cityId == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready");
-    if (this.gameState.status != null) {
-      if (this.gameState.status === true) {
+    if (this.gameState.globals != undefined && this.gameState.globals.status != null) {
+      if (this.gameState.globals.status === true) {
         this.blackoutRectangle.clear();
         this.placeholderText.setText("YOU WIN!!!!!")
       } else {
         this.blackoutRectangle.beginFill(0x000000);
         this.blackoutRectangle.drawRect(0, 0, 854, 1280);
         this.blackoutRectangle.endFill();
-        this.placeholderText.setText("City " + (this.gameState.status + 1) + " BLACKED OUT.");
+        this.placeholderText.setText("City " + (this.gameState.globals.status + 1) + " BLACKED OUT.");
       }
       this.readyButton.setText("AGAIN");
-      this.gameState.status = null;
     }
   }
-  if (this.gameState.globals && this.gameState.globals.startTime != null && Date.now() >= this.gameState.globals.startTime) {
-    return "play";
+  if (this.gameState.currentCity != undefined) {
+    this.readyButton.setStyle({
+      font: "normal 100pt Arial",
+      fill: this.gameState.currentCity.ready ? "green" : "#525252"
+    });
   }
 };

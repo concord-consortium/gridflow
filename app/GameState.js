@@ -17,16 +17,15 @@ module.exports = function () {
   this.currentStage = undefined;
   // The firebase object
   this.firebase = undefined;
-  // A cityId if a city blacked out, or true on win.
-  this.status = undefined;
+  // The time from which the game starts.
+  this.startTime = undefined;
   // A flag to update the current stage.
   this.hasUpdated = true;
-
   // Constants
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
   // Length of day in milliseconds
-  this.DAY_LENGTH = 60 * 1000;
+  this.DAY_LENGTH = 3 * 1000;
   this.WIN_AFTER = 5 * this.DAY_LENGTH;
 };
 // Connect to an island
@@ -58,24 +57,6 @@ module.exports.prototype.connect = function () {
           return;
         }
       }
-      // Set up the city
-      this.currentCity = this.sync[this.cityId] = {
-        // Whether the "ready" button is pressed
-        "ready": false,
-        // Outgoing energy
-        "outgoing": [],
-        // Whether or not the city has blacked out
-        "blackout": false
-      };
-      // Host has extra metadata
-      if (this.cityId === 0) {
-        this.globals = this.currentCity.globals = {
-          // startTime is also used as an indicator of playing/not playing
-          "startTime": null
-        }
-      } else {
-        this.globals = this.sync[0].globals;
-      }
       // Listen to other cities
       this.firebase.child(this.cityId).onDisconnect().set(null);
       for (i = 0; i < this.MAX_CITIES; i++) {
@@ -83,8 +64,7 @@ module.exports.prototype.connect = function () {
           this.addCityListener(i);
         }
       }
-      this.syncCity();
-      this.hasUpdated = true;
+      this.resetCity();
     }
   }, this);
 }
@@ -117,4 +97,28 @@ module.exports.prototype.addCityListener = function (city) {
     }
     this.hasUpdated = true;
   }, this);
+}
+// Resets the city for the beginning of a game
+module.exports.prototype.resetCity = function (status) {
+  // Set up the city
+  this.currentCity = this.sync[this.cityId] = {
+    // Whether the "ready" button is pressed
+    "ready": false,
+    // Outgoing energy
+    "outgoing": [],
+    // Whether or not the city has blacked out
+    "blackout": false
+  };
+  // Host has extra metadata
+  if (this.cityId === 0) {
+    this.globals = this.currentCity.globals = {
+      // startTime is also used as an indicator of playing/not playing
+      "playing": false,
+      "startTIme": null,
+      // A cityId if a city blacked out, or true on win.
+      "status": status === undefined ? null : status
+    }
+  }
+  this.hasUpdated = true;
+  this.syncCity();
 }
