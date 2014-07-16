@@ -2,7 +2,7 @@
  * BarChart.js
  * Creates a horizontal bar chart in PIXI with customizable
  * color(s), widths, and height.
- * 
+ *
  * Each bar segment has a value (width) and color. A segment
  * with a value of maxSegmentValue will be the entire width
  * of the BarChart.
@@ -25,7 +25,8 @@ module.exports = function (width, height, segmentValues, segmentColors, maxSegme
  */
 module.exports.prototype.update = function () {
   "use strict";
-  var previous = 0, i, segmentWidth;
+  var previous = 0,
+    i, segmentWidth;
   this.drawable.clear();
   for (i = 0; i < this.segmentValues.length; i++) {
     this.drawable.beginFill(this.segmentColors[i]);

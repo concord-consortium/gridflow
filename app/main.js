@@ -1,16 +1,23 @@
 var BarChart = require("components/BarChart"),
-    GameState = require("GameState"),
-    Wait = require("scenes/Join"),
-    Play = require("scenes/Play"),
-    animate;
+  GameState = require("GameState"),
+  Join = require("scenes/Join"),
+  Play = require("scenes/Play");
 
 
 var gameState = new GameState(),
-    renderer = new PIXI.autoDetectRenderer(854, 1280);
+  renderer = new PIXI.autoDetectRenderer(854, 1280),
+  stage = new PIXI.Stage(0xFFFFFF),
+  stages = {
+    join: new Join(gameState, stage),
+    play: new Play(gameState, stage)
+  },
+  animate;
+stage.interactive = true;
 
-gameState.islandName = "testland";
+gameState.islandName = window.location.hash.replace(/[^a-z]+/g,"")||"default";
 gameState.connect();
-gameState.currentStage = Wait;
+gameState.currentStage = stages.join;
+gameState.currentStage.container.visible = true;
 
 document.body.appendChild(renderer.view);
 
@@ -20,9 +27,17 @@ document.body.appendChild(renderer.view);
 
 animate = function () {
   "use strict";
-  gameState.currentStage.render(gameState);
-  gameState.hasUpdated = false;
-  renderer.render(gameState.currentStage.stage);
+  var switchTo = gameState.currentStage.render();
+  if (switchTo != undefined) {
+    gameState.currentStage.container.visible = false;
+    gameState.currentStage = stages[switchTo];
+    gameState.currentStage.container.visible = true;
+    gameState.currentStage.render();
+    gameState.hasUpdated = true;
+  } else {
+    gameState.hasUpdated = false;
+  }
+  renderer.render(stage);
   requestAnimationFrame(animate);
 };
 requestAnimationFrame(animate);

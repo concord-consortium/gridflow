@@ -1,4 +1,4 @@
-body{
+body {
   margin: 0;
   position: absolute;
   left: 0;
@@ -9,6 +9,6 @@ body{
   text-align: center;
   background-color: black;
 }
-canvas{
+canvas {
   height: 100%;
 }
