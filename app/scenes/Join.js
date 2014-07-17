@@ -70,7 +70,7 @@ module.exports.prototype.render = function () {
       }
     }
     if (this.gameState.host === true) {
-      if (true /*ready >= total && total >= 2*/ ) {
+      if (ready >= total && total >= 2 /* || ready >= 1*/ ) {
         if (this.gameState.globals.playing === false) {
           this.gameState.globals.playing = true;
           this.gameState.globals.startTime = Date.now();

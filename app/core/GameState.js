@@ -25,7 +25,8 @@ module.exports = function () {
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
   // Time is all in milliseconds
-  this.ENERGY_SEND_LENGTH = 10 * 1000;
+  this.ENERGY_SEND_LENGTH = 20 * 1000;
+  this.BLACKOUT_DELAY = 1 * 1000;
   this.DAY_LENGTH = 60 * 1000;
   this.WIN_AFTER = 5 * this.DAY_LENGTH;
   this.ENERGY_COLOR = 0xfff36a;
@@ -122,7 +123,7 @@ module.exports.prototype.resetCity = function (status) {
     "blackout": false
   };
   // Host has extra metadata
-  if (this.cityId === 0) {
+  if (this.host === true) {
     this.globals = this.currentCity.globals = {
       // startTime is also used as an indicator of playing/not playing
       "playing": false,

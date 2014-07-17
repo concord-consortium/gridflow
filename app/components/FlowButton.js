@@ -7,7 +7,6 @@
  * with a value of maxSegmentValue will be the entire width
  * of the BarChart.
  */
-var flow = require("core/flow");
 module.exports = function (width, height) {
   "use strict";
   this.width = width || 0;

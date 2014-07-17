@@ -4,11 +4,14 @@
  */
 var BarChart = require("components/BarChart"),
   FlowButton = require("components/FlowButton"),
-  flow = require("core/flow");
+  Flow = require("core/Flow");
 
 module.exports = function (gameState, stage) {
   var i;
   this.gameState = gameState;
+  this.flow = new Flow(gameState);
+
+  this.blackoutImminent = null;
 
   this.container = new PIXI.DisplayObjectContainer();
   this.container.visible = false;
@@ -29,13 +32,21 @@ module.exports = function (gameState, stage) {
   this.container.addChild(this.outputBar.drawable);
   this.outputBar.drawable.position.set(12, 350);
 
+  this.totalOutputBar = new BarChart(830, 50, [0, 0], [0xCCCCCC, this.gameState.MISSING_ENERGY_COLOR], this.gameState.MAX_ENERGY);
+  this.container.addChild(this.totalOutputBar.drawable);
+  this.totalOutputBar.drawable.position.set(12, 280);
+
   this.outputText = new PIXI.Text("Demand", {
     font: "normal 30pt Arial"
   });
   this.container.addChild(this.outputText);
-  this.outputText.position.set(12, 350);
+  this.outputText.position.set(12, 280);
 
-  this.inputBar = new BarChart(830, 50, [0, 0, 0, 0, 0], [this.gameState.ENERGY_COLOR].concat(this.gameState.CITY_COLORS).concat(this.gameState.EXTRA_ENERGY_COLOR), this.gameState.MAX_ENERGY);
+  this.totalInputBar = new BarChart(830, 50, [0, 0], [0xCCCCCC, this.gameState.EXTRA_ENERGY_COLOR], this.gameState.MAX_ENERGY);
+  this.container.addChild(this.totalInputBar.drawable);
+  this.totalInputBar.drawable.position.set(12, 1090);
+
+  this.inputBar = new BarChart(830, 50, [0, 0, 0, 0], [this.gameState.ENERGY_COLOR].concat(this.gameState.CITY_COLORS), this.gameState.MAX_ENERGY);
   this.container.addChild(this.inputBar.drawable);
   this.inputBar.drawable.position.set(12, 1020);
 
@@ -43,7 +54,7 @@ module.exports = function (gameState, stage) {
     font: "normal 30pt Arial"
   });
   this.container.addChild(this.inputText);
-  this.inputText.position.set(12, 1020);
+  this.inputText.position.set(12, 1090);
 
   this.blackoutBar = new BarChart(854, 100, [0, 1], [this.gameState.MISSING_ENERGY_COLOR, 0x000000], 1);
   this.container.addChild(this.blackoutBar.drawable);
@@ -57,11 +68,11 @@ module.exports = function (gameState, stage) {
   this.container.addChild(this.blackoutText);
   this.blackoutText.position.set(0, 150);
 
-  this.inputTypeText = new PIXI.Text("WIND", {
+  this.inputTypeText = new PIXI.Text("", {
     font: "normal 50pt Arial"
   });
   this.container.addChild(this.inputTypeText);
-  this.inputTypeText.position.set(10, 1100);
+  this.inputTypeText.position.set(10, 1150);
   //  this.loseButton = new PIXI.Text("Insta-lose", {
   //    font: "normal 70pt Arial",
   //    fill: "#f00"
@@ -89,7 +100,7 @@ module.exports = function (gameState, stage) {
 // Renders the scene
 module.exports.prototype.render = function () {
   var elapsed = Date.now() - this.gameState.startTime,
-    i, city, flowButton, totalReceived, totalSent, contract;
+    i, city, flowButton, contract, dayProgression;
   if (elapsed < 0) {
     elapsed = 0;
     this.gameState.startTime -= elapsed;
@@ -109,24 +120,29 @@ module.exports.prototype.render = function () {
     return;
   }
   // Update the flows for rendering
-  flow.pruneOutgoing.call(this.gameState, elapsed);
-  if (this.gameState.hasUpdated) {
-    //Handle lose
-    if (this.gameState.host === true) {
-      for (i = 0; i < this.gameState.MAX_CITIES; i++) {
-        if (this.gameState.sync[i] != undefined && this.gameState.sync[i].blackout === true) {
-          this.gameState.resetCity(i);
-          return "join";
-        }
+  this.flow.setElapsed(elapsed);
+  this.flow.pruneOutgoing();
+  this.flow.computeFlow();
+  //Handle lose for others
+  if (this.gameState.hasUpdated && this.gameState.host === true) {
+    for (i = 0; i < this.gameState.MAX_CITIES; i++) {
+      if (this.gameState.sync[i] != undefined && this.gameState.sync[i].blackout === true) {
+        this.gameState.resetCity(i);
+        return "join";
+        //Repeated down below.
       }
     }
+  }
+  if (this.gameState.hasUpdated) {
     // Rendering begins!
-    this.cityText.setText("City " + (this.gameState.cityId + 1));
-    this.cityText.setStyle({
-      font: "normal 50pt Arial",
-      fill: this.gameState.CITY_COLORS[this.gameState.cityId].toString(16)
-    });
-
+    i = "City " + (this.gameState.cityId + 1);
+    if (this.cityText.text != i) {
+      this.cityText.setText(i);
+      this.cityText.setStyle({
+        font: "normal 50pt Arial",
+        fill: this.gameState.CITY_COLORS[this.gameState.cityId].toString(16)
+      });
+    }
   }
   // Update flows and graphs
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
@@ -143,36 +159,74 @@ module.exports.prototype.render = function () {
     }
     flowButton.update(elapsed, this.gameState);
     // Update receiving text and I/O bars
-    contract = flow.getEnergyFrom.call(this.gameState, city);
+    contract = this.flow.receive[city];
     if (contract == null) {
       flowButton.receiveText.setText("");
       this.outputBar.segmentValues[city + 1] = 0;
     } else {
-      totalReceived += contract.amount;
       flowButton.receiveText.setText("Receving " + contract.amount + "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s left");
       this.outputBar.segmentValues[city + 1] = contract.amount;
     }
     // Update sending text and I/O bars
-    contract = flow.getEnergyTo.call(this.gameState, city);
+    contract = this.flow.send[city];
     if (contract == null) {
       flowButton.sendText.setText("Tap to\nsend 1");
       this.inputBar.segmentValues[city + 1] = 0;
     } else {
-      totalSent += contract.amount;
       flowButton.sendText.setText("Sending " + contract.amount + "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s left");
       this.inputBar.segmentValues[city + 1] = contract.amount;
     }
   }
+  // Yum. Gotta update all those bars.
+  this.inputBar.segmentValues[0] = this.outputBar.segmentValues[0] = this.flow.common;
+  this.totalOutputBar.segmentValues[0] = this.flow.getTotalDemand() - this.flow.missing;
+  this.totalOutputBar.segmentValues[1] = this.flow.missing;
+  this.totalInputBar.segmentValues[0] = this.flow.getTotalSource() - this.flow.extra;
+  this.totalInputBar.segmentValues[1] = this.flow.extra;
+
   this.inputBar.update();
   this.outputBar.update();
-  this.statusText.setText("Day " + Math.floor(1 + elapsed / this.gameState.DAY_LENGTH));
+  this.totalInputBar.update();
+  this.totalOutputBar.update();
+
+  //Handle that blackout
+  if (this.flow.missing > 0) {
+    if (this.blackoutImminent == null) {
+      this.blackoutImminent = elapsed + this.gameState.BLACKOUT_DELAY;
+    }
+    if (elapsed >= this.blackoutImminent && this.gameState.currentCity.blackout == false) {
+      //Lost
+      this.gameState.currentCity.blackout = true;
+      this.blackoutImminent = null;
+      if (this.gameState.host === true) {
+        this.gameState.resetCity(0);
+        return "join";
+      } else {
+        this.gameState.syncCity();
+      }
+    }
+    this.blackoutBar.drawable.visible = true;
+    this.blackoutBar.segmentValues[1] = Math.max(0, (this.blackoutImminent - elapsed) / this.gameState.BLACKOUT_DELAY);
+    this.blackoutBar.segmentValues[0] = 1 - this.blackoutBar.segmentValues[1];
+    this.blackoutBar.update();
+  } else {
+    this.blackoutImminent = null;
+    this.blackoutBar.drawable.visible = false;
+  }
+
+  //Update source type text
+  this.inputTypeText.setText(Object.keys(this.flow.getSources()).join(", ").toUpperCase());
+
+  //Update day text
+  dayProgression = elapsed / this.gameState.DAY_LENGTH;
+  this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24) % 12 + 1) + ":00 " + (dayProgression % 1 < 0.5 ? "AM" : "PM"));
 }
 var addFlowButtonListener = function (flowButton, i) {
   var that = this;
   flowButton.drawable.click =
     flowButton.drawable.tap = function () {
       var city = i >= that.gameState.cityId ? i + 1 : i;
-      flow.sendEnergy.call(that.gameState, city, 1);
+      that.flow.sendEnergy(city, 1);
   }
 
 }
