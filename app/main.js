@@ -13,8 +13,7 @@ var gameState = new GameState(),
   animate;
 stage.interactive = true;
 
-gameState.islandName = window.location.hash.replace(/[^a-z]+/g, "") || "default";
-gameState.connect();
+gameState.connect(window.location.hash.replace(/[^a-z]+/g, "") || "default");
 gameState.currentStage = stages.join;
 gameState.currentStage.container.visible = true;
 

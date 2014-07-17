@@ -43,18 +43,20 @@ module.exports.prototype.computeFlow = function () {
   this.sendSum = 0;
   var i, from, to, demand;
   for (i = 0; i < this.gameState.MAX_CITIES; i++) {
+    from = null;
+    to = null;
     if (this.gameState.sync[i] != null && i !== this.gameState.cityId) {
       from = this.getEnergyFrom(i);
-      this.receive[i] = from;
       if (from != null) {
         this.receiveSum += from.amount;
       }
       to = this.getEnergyTo(i);
-      this.send[i] = to;
       if (to != null) {
         this.sendSum += to.amount;
       }
     }
+    this.receive[i] = from;
+    this.send[i] = to;
   }
   this.extra = this.getTotalSource() - this.sendSum;
   demand = Math.max(0, this.getTotalDemand() - this.receiveSum);

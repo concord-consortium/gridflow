@@ -43,7 +43,7 @@ module.exports = function (gameState, stage) {
   var that = this;
   this.readyButton.mousedown =
     this.readyButton.touchstart = function () {
-      if (that.gameState.currentCity != undefined && that.gameState.globals != undefined && that.gameState.globals.playing === false) {
+      if (that.gameState.currentCity != undefined && that.gameState.globals != undefined) {
         that.gameState.currentCity.ready = true;
         that.gameState.syncCity();
       }
@@ -51,7 +51,7 @@ module.exports = function (gameState, stage) {
   this.readyButton.mouseup =
     this.readyButton.touchend =
     this.readyButton.mouseout = function () {
-      if (that.gameState.currentCity != undefined && that.gameState.globals != undefined && that.gameState.globals.playing === false) {
+      if (that.gameState.currentCity != undefined && that.gameState.globals != undefined) {
         that.gameState.currentCity.ready = false;
         that.gameState.syncCity();
       }
@@ -70,16 +70,17 @@ module.exports.prototype.render = function () {
       }
     }
     if (this.gameState.host === true) {
-      if (ready >= total && total >= 2 /* || ready >= 1*/ ) {
+      if (ready >= total && total >= 2) {
         if (this.gameState.globals.playing === false) {
           this.gameState.globals.playing = true;
+          this.gameState.globals.status = null;
           this.gameState.globals.startTime = Date.now();
           this.gameState.syncCity();
         }
       }
     }
     // Start the game if everyone is ready
-    if (this.gameState.globals != undefined && this.gameState.globals.playing === true) {
+    if (this.gameState.globals != undefined && this.gameState.globals.playing === true && this.gameState.currentCity != undefined && this.gameState.currentCity.ready === true) {
       this.gameState.startTime = Math.min(Date.now(), this.gameState.globals.startTime);
       return "play";
     }

@@ -2,6 +2,7 @@
  * GameState.js
  * An object to hold and synchronize data behind the game.
  */
+var Dynamics = require("core/Dynamics");
 module.exports = function () {
   "use strict";
   this.sync = {};
@@ -21,12 +22,14 @@ module.exports = function () {
   this.startTime = undefined;
   // A flag to update the current stage.
   this.hasUpdated = true;
+  this.dynamics = new Dynamics(this);
   // Constants
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
   // Time is all in milliseconds
+  this.UPDATE_INTERVAL = 2 * 1000;
   this.ENERGY_SEND_LENGTH = 20 * 1000;
-  this.BLACKOUT_DELAY = 1 * 1000;
+  this.BLACKOUT_DELAY = 20 * 1000;
   this.DAY_LENGTH = 60 * 1000;
   this.WIN_AFTER = 5 * this.DAY_LENGTH;
   this.ENERGY_COLOR = 0xfff36a;
@@ -42,8 +45,9 @@ module.exports = function () {
   ];
 };
 // Connect to an island
-module.exports.prototype.connect = function () {
+module.exports.prototype.connect = function (islandName) {
   "use strict";
+  this.islandName = islandName;
   this.firebase = new Firebase(this.FIREBASE_URL + this.islandName);
   this.firebase.once("value", function (data) {
     var val = data.val(),
@@ -65,7 +69,6 @@ module.exports.prototype.connect = function () {
         }
         if (this.cityId == undefined) {
           alert("Session is full.");
-          console.error("Session is full!");
           this.firebase.off();
           return;
         }
@@ -113,6 +116,8 @@ var addCityListener = function (city) {
   }
   // Resets the city for the beginning of a game
 module.exports.prototype.resetCity = function (status) {
+  // Reset some variables
+  this.startTime = undefined;
   // Set up the city
   this.currentCity = this.sync[this.cityId] = {
     // Whether the "ready" button is pressed
@@ -137,29 +142,12 @@ module.exports.prototype.resetCity = function (status) {
         Math.random()
       ],
       // Energy sources and their max production
-      "supply": [
-        {
-          "wind": 4 + 2 * Math.random()
-        },
-        {
-          "solar": 3 + 2 * Math.random()
-        },
-        {
-          "fossil": 6 + 2 * Math.random()
-        },
-        {
-          "solar": 3 + 2 * Math.random()
-        }
-      ],
+      "supply": [],
       // Average demand
-      "demand": [
-        3 + 2 * Math.random(),
-        2 + 2 * Math.random(),
-        5 + 2 * Math.random(),
-        2 + 2 * Math.random()
-      ],
+      "demand": []
     }
   }
+  this.dynamics.init();
   this.hasUpdated = true;
   this.syncCity();
 }

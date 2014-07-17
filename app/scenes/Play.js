@@ -5,12 +5,12 @@
 var BarChart = require("components/BarChart"),
   FlowButton = require("components/FlowButton"),
   Flow = require("core/Flow");
-
+var addFlowButtonListener, reset;
 module.exports = function (gameState, stage) {
   var i;
   this.gameState = gameState;
   this.flow = new Flow(gameState);
-
+  this.lastUpdated = 0;
   this.blackoutImminent = null;
 
   this.container = new PIXI.DisplayObjectContainer();
@@ -105,15 +105,19 @@ module.exports.prototype.render = function () {
     elapsed = 0;
     this.gameState.startTime -= elapsed;
   }
+  //Start in middle of day.
+  elapsed += this.gameState.DAY_LENGTH / 2;
   // Listen to the host and stop when the host does.
   if (this.gameState.hasUpdated && this.gameState.globals.playing === false) {
     this.gameState.resetCity();
+    reset.call(this);
     return "join";
   }
   // Handle win
   if (elapsed >= this.gameState.WIN_AFTER) {
     if (this.gameState.host === true) {
       this.gameState.resetCity(true);
+      reset.call(this);
       return "join";
     }
     // Prevent any rendering/updates and wait for host to win
@@ -128,13 +132,24 @@ module.exports.prototype.render = function () {
     for (i = 0; i < this.gameState.MAX_CITIES; i++) {
       if (this.gameState.sync[i] != undefined && this.gameState.sync[i].blackout === true) {
         this.gameState.resetCity(i);
+        reset.call(this);
         return "join";
         //Repeated down below.
       }
     }
   }
+  //STOP if you have a blackout.
+  if (this.gameState.currentCity.blackout === true) {
+    return;
+  }
+  //If host, update all sources/dests
+  if (this.gameState.host === true && elapsed >= this.lastUpdated + this.gameState.UPDATE_INTERVAL) {
+    this.lastUpdated = elapsed;
+    this.gameState.dynamics.update(elapsed);
+    this.gameState.syncCity();
+  }
+  // Rendering begins!
   if (this.gameState.hasUpdated) {
-    // Rendering begins!
     i = "City " + (this.gameState.cityId + 1);
     if (this.cityText.text != i) {
       this.cityText.setText(i);
@@ -200,6 +215,7 @@ module.exports.prototype.render = function () {
       this.blackoutImminent = null;
       if (this.gameState.host === true) {
         this.gameState.resetCity(0);
+        reset.call(this);
         return "join";
       } else {
         this.gameState.syncCity();
@@ -221,12 +237,15 @@ module.exports.prototype.render = function () {
   dayProgression = elapsed / this.gameState.DAY_LENGTH;
   this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24) % 12 + 1) + ":00 " + (dayProgression % 1 < 0.5 ? "AM" : "PM"));
 }
-var addFlowButtonListener = function (flowButton, i) {
+addFlowButtonListener = function (flowButton, i) {
   var that = this;
   flowButton.drawable.click =
     flowButton.drawable.tap = function () {
       var city = i >= that.gameState.cityId ? i + 1 : i;
       that.flow.sendEnergy(city, 1);
   }
-
+}
+reset = function () {
+  this.blackoutImminent = null;
+  this.lastUpdated = 0;
 }
