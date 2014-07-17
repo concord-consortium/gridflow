@@ -27,11 +27,12 @@ module.exports = function () {
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
   // Time is all in milliseconds
-  this.UPDATE_INTERVAL = 2 * 1000;
-  this.ENERGY_SEND_LENGTH = 20 * 1000;
-  this.BLACKOUT_DELAY = 20 * 1000;
   this.DAY_LENGTH = 60 * 1000;
   this.WIN_AFTER = 5 * this.DAY_LENGTH;
+  this.UPDATE_INTERVAL = 2 * 1000;
+  this.ENERGY_SEND_LENGTH = 8 * this.DAY_LENGTH / 24;
+  this.ENERGY_PER_CONTRACT = 1;
+  this.BLACKOUT_DELAY = 8 * this.DAY_LENGTH / 24;
   this.ENERGY_COLOR = 0xfff36a;
   this.MISSING_ENERGY_COLOR = 0xff0000;
   this.EXTRA_ENERGY_COLOR = 0x00c617;

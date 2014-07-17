@@ -7,8 +7,8 @@ var gameState = new GameState(),
   renderer = new PIXI.autoDetectRenderer(854, 1280),
   stage = new PIXI.Stage(0xFFFFFF),
   stages = {
-    join: new Join(gameState, stage),
-    play: new Play(gameState, stage)
+    play: new Play(gameState, stage),
+    join: new Join(gameState, stage)
   },
   animate;
 stage.interactive = true;
@@ -27,7 +27,10 @@ animate = function () {
   "use strict";
   var switchTo = gameState.currentStage.render();
   if (switchTo != undefined) {
-    gameState.currentStage.container.visible = false;
+    // Keep the game visible underneath
+    if (switchTo != "join") {
+      gameState.currentStage.container.visible = false;
+    }
     gameState.currentStage = stages[switchTo];
     gameState.currentStage.container.visible = true;
     gameState.currentStage.render();

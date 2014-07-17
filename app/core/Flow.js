@@ -65,17 +65,22 @@ module.exports.prototype.computeFlow = function () {
   this.missing = Math.max(0, demand - this.common);
 };
 
-module.exports.prototype.sendEnergy = function (dest, amount) {
+module.exports.prototype.sendEnergy = function (dest) {
   "use strict";
-  // No double sending!
   var contract;
-  if (this.send[dest] == null && amount <= this.extra + this.common) {
-    contract = {
-      dest: dest,
-      until: this.elapsed + this.gameState.ENERGY_SEND_LENGTH,
-      amount: amount
-    };
-    this.gameState.currentCity.outgoing.push(contract);
+  if (this.gameState.ENERGY_PER_CONTRACT <= this.extra + this.common) {
+    if (this.send[dest] == null) {
+      contract = {
+        dest: dest,
+        until: this.elapsed + this.gameState.ENERGY_SEND_LENGTH,
+        amount: this.gameState.ENERGY_PER_CONTRACT
+      };
+      this.gameState.currentCity.outgoing.push(contract);
+    } else {
+      // Renew contract with more energy
+      this.send[dest].amount += this.gameState.ENERGY_PER_CONTRACT;
+      this.send[dest].until = this.elapsed + this.gameState.ENERGY_SEND_LENGTH;
+    }
     this.gameState.syncCity();
     this.computeFlow();
   }

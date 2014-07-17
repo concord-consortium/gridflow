@@ -95,17 +95,17 @@ module.exports.prototype.render = function () {
     this.cityText.setText(this.gameState.cityId == undefined ? "" : "City " + (this.gameState.cityId + 1));
     this.statusText.setText(this.gameState.cityId == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready");
     if (this.gameState.globals != undefined && this.gameState.globals.status != null) {
+      this.blackoutRectangle.clear();
+      this.blackoutRectangle.beginFill(this.gameState.globals.status === true ? 0xFFFFFF : 0x000000, 0.5);
+      this.blackoutRectangle.drawRect(0, 0, 854, 1280);
+      this.blackoutRectangle.endFill();
       if (this.gameState.globals.status === true) {
-        this.blackoutRectangle.clear();
         this.placeholderText.setText("YOU WIN!!!!!")
         this.placeholderText.setStyle({
           font: "normal 50pt Arial",
           fill: "#0fb45c"
         });
       } else {
-        this.blackoutRectangle.beginFill(0x000000);
-        this.blackoutRectangle.drawRect(0, 0, 854, 1280);
-        this.blackoutRectangle.endFill();
         this.placeholderText.setText("City " + (this.gameState.globals.status + 1) + " BLACKED OUT.");
         this.placeholderText.setStyle({
           font: "normal 50pt Arial",

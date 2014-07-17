@@ -26,7 +26,7 @@ module.exports = function (gameState, stage) {
     font: "normal 30pt Arial"
   });
   this.container.addChild(this.statusText);
-  this.statusText.position.set(400, 0);
+  this.statusText.position.set(400, 50);
 
   this.outputBar = new BarChart(830, 50, [0, 0, 0, 0, 0], [this.gameState.ENERGY_COLOR].concat(this.gameState.CITY_COLORS).concat(this.gameState.MISSING_ENERGY_COLOR), this.gameState.MAX_ENERGY);
   this.container.addChild(this.outputBar.drawable);
@@ -179,7 +179,7 @@ module.exports.prototype.render = function () {
       flowButton.receiveText.setText("");
       this.outputBar.segmentValues[city + 1] = 0;
     } else {
-      flowButton.receiveText.setText("Receving " + contract.amount + "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s left");
+      flowButton.receiveText.setText("Receving " + contract.amount + "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.DAY_LENGTH) + "h left");
       this.outputBar.segmentValues[city + 1] = contract.amount;
     }
     // Update sending text and I/O bars
@@ -188,7 +188,7 @@ module.exports.prototype.render = function () {
       flowButton.sendText.setText("Tap to\nsend 1");
       this.inputBar.segmentValues[city + 1] = 0;
     } else {
-      flowButton.sendText.setText("Sending " + contract.amount + "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s left");
+      flowButton.sendText.setText("Sending " + contract.amount + "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.DAY_LENGTH) + "h left");
       this.inputBar.segmentValues[city + 1] = contract.amount;
     }
   }
@@ -242,7 +242,7 @@ addFlowButtonListener = function (flowButton, i) {
   flowButton.drawable.click =
     flowButton.drawable.tap = function () {
       var city = i >= that.gameState.cityId ? i + 1 : i;
-      that.flow.sendEnergy(city, 1);
+      that.flow.sendEnergy(city);
   }
 }
 reset = function () {
