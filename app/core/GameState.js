@@ -146,8 +146,8 @@ module.exports.prototype.resetCity = function (status) {
       // Average demand
       "demand": []
     }
+    this.dynamics.init();
   }
-  this.dynamics.init();
   this.hasUpdated = true;
   this.syncCity();
 }
