@@ -42,7 +42,7 @@ module.exports = function (gameState, stage) {
   this.container.addChild(this.outputText);
   this.outputText.position.set(12, 280);
 
-  this.totalInputBar = new BarChart(830, 50, [0, 0], [0xCCCCCC, this.gameState.EXTRA_ENERGY_COLOR], this.gameState.MAX_ENERGY);
+  this.totalInputBar = new BarChart(830, 50, [0, 0, 0], this.gameState.ENERGY_SOURCE_COLORS, this.gameState.MAX_ENERGY);
   this.container.addChild(this.totalInputBar.drawable);
   this.totalInputBar.drawable.position.set(12, 1090);
 
@@ -100,7 +100,7 @@ module.exports = function (gameState, stage) {
 // Renders the scene
 module.exports.prototype.render = function () {
   var elapsed = Date.now() - this.gameState.startTime,
-    i, city, flowButton, contract, dayProgression;
+    i, city, flowButton, contract, dayProgression, text;
   if (elapsed < 0) {
     elapsed = 0;
     this.gameState.startTime -= elapsed;
@@ -158,6 +158,18 @@ module.exports.prototype.render = function () {
         fill: this.gameState.CITY_COLORS[this.gameState.cityId].toString(16)
       });
     }
+    //Update source type text
+    text = "";
+    for (i = 0; i < this.gameState.ENERGY_SOURCE_NAMES.length; i++) {
+      if (this.flow.getSources()[i] != null) {
+        if (text.length > 0) {
+          text += ", ";
+        }
+        text += this.gameState.ENERGY_SOURCE_NAMES[i];
+      }
+    }
+    this.inputTypeText.setText(text);
+
   }
   // Update flows and graphs
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
@@ -177,27 +189,28 @@ module.exports.prototype.render = function () {
     contract = this.flow.receive[city];
     if (contract == null) {
       flowButton.receiveText.setText("");
-      this.outputBar.segmentValues[city + 1] = 0;
+      this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
     } else {
       flowButton.receiveText.setText("Receving " + contract.amount + "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.DAY_LENGTH) + "h left");
-      this.outputBar.segmentValues[city + 1] = contract.amount;
+      this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
     }
     // Update sending text and I/O bars
     contract = this.flow.send[city];
     if (contract == null) {
       flowButton.sendText.setText("Tap to\nsend 1");
-      this.inputBar.segmentValues[city + 1] = 0;
+      this.inputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
     } else {
       flowButton.sendText.setText("Sending " + contract.amount + "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.DAY_LENGTH) + "h left");
-      this.inputBar.segmentValues[city + 1] = contract.amount;
+      this.inputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
     }
   }
   // Yum. Gotta update all those bars.
-  this.inputBar.segmentValues[0] = this.outputBar.segmentValues[0] = this.flow.common;
-  this.totalOutputBar.segmentValues[0] = this.flow.getTotalDemand() - this.flow.missing;
-  this.totalOutputBar.segmentValues[1] = this.flow.missing;
-  this.totalInputBar.segmentValues[0] = this.flow.getTotalSource() - this.flow.extra;
-  this.totalInputBar.segmentValues[1] = this.flow.extra;
+  this.inputBar.segmentValues[0] = this.outputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * this.flow.common;
+  this.totalOutputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.totalOutputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * (this.flow.getTotalDemand() - this.flow.missing);
+  this.totalOutputBar.segmentValues[1] = (1 - this.gameState.ANIMATION_RATE) * this.totalOutputBar.segmentValues[1] + this.gameState.ANIMATION_RATE * this.flow.missing;
+  this.totalInputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[0]);
+  this.totalInputBar.segmentValues[1] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[1] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[1]);
+  this.totalInputBar.segmentValues[2] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[2] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[2]);
 
   this.inputBar.update();
   this.outputBar.update();
@@ -230,12 +243,9 @@ module.exports.prototype.render = function () {
     this.blackoutBar.drawable.visible = false;
   }
 
-  //Update source type text
-  this.inputTypeText.setText(Object.keys(this.flow.getSources()).join(", ").toUpperCase());
-
   //Update day text
   dayProgression = elapsed / this.gameState.DAY_LENGTH;
-  this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24) % 12 + 1) + ":00 " + (dayProgression % 1 < 0.5 ? "AM" : "PM"));
+  this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24) % 12 + 1) + ":00 " + (dayProgression % 1 <= 0.5 ? "AM" : "PM"));
 }
 addFlowButtonListener = function (flowButton, i) {
   var that = this;

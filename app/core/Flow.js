@@ -123,9 +123,11 @@ module.exports.prototype.getSources = function () {
 module.exports.prototype.getTotalSource = function () {
   var sources = this.getSources(),
     total = 0,
-    source;
-  for (source in sources) {
-    total += sources[source];
+    i;
+  for (i = 0; i < this.gameState.ENERGY_SOURCE_NAMES.length; i++) {
+    if (sources[i] != null) {
+      total += sources[i];
+    }
   }
   return total;
 }
