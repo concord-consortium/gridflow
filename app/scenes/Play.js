@@ -212,9 +212,9 @@ module.exports.prototype.render = function () {
   this.inputBar.segmentValues[0] = this.outputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * this.flow.common;
   this.totalOutputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.totalOutputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * (this.flow.getTotalDemand() - this.flow.missing);
   this.totalOutputBar.segmentValues[1] = (1 - this.gameState.ANIMATION_RATE) * this.totalOutputBar.segmentValues[1] + this.gameState.ANIMATION_RATE * this.flow.missing;
-  this.totalInputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[0]);
-  this.totalInputBar.segmentValues[1] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[1] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[1]);
-  this.totalInputBar.segmentValues[2] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[2] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[2]);
+  this.totalInputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[0] || 0);
+  this.totalInputBar.segmentValues[1] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[1] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[1] || 0);
+  this.totalInputBar.segmentValues[2] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[2] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[2] || 0);
 
   this.inputBar.update();
   this.outputBar.update();

@@ -13,15 +13,17 @@ var gameState = new GameState(),
   animate;
 stage.interactive = true;
 
+// Set everything up
 gameState.connect(window.location.hash.replace(/[^a-z]+/g, "") || "default");
 gameState.currentStage = stages.join;
 gameState.currentStage.container.visible = true;
 
 document.body.appendChild(renderer.view);
 
-//var chart1=new BarChart(500, 20, [1,2,3], [0xFF0000, 0x00FF00, 0x0000FF],7);
-//chart1.update();
-//.addChild(chart1.drawable);
+//Reload if hash has changed
+window.addEventListener("hashchange", function () {
+  window.location.reload();
+}, false);
 
 animate = function () {
   "use strict";

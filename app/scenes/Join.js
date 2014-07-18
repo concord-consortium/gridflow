@@ -121,7 +121,7 @@ module.exports.prototype.render = function () {
         this.placeholderText.setText("City " + (this.gameState.globals.status + 1) + " BLACKED OUT.");
         this.placeholderText.setStyle({
           font: "normal 50pt Arial",
-          fill: this.gameState.CITY_COLORS[this.gameState.globals.status].toString(16)
+          fill: "#" + this.gameState.CITY_COLORS[this.gameState.globals.status].toString(16)
         });
       }
       this.readyButton.setText("AGAIN");
