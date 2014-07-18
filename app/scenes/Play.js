@@ -17,16 +17,20 @@ module.exports = function (gameState, stage) {
   this.container.visible = false;
   stage.addChild(this.container);
 
+  this.cityBackground = new PIXI.Graphics();
+  this.container.addChild(this.cityBackground);
+
   this.cityText = new PIXI.Text("", {
     font: "normal 50pt Arial"
   });
+  this.cityText.position.set(10, 10);
   this.container.addChild(this.cityText);
 
   this.statusText = new PIXI.Text("", {
     font: "normal 30pt Arial"
   });
+  this.statusText.position.set(400, 100);
   this.container.addChild(this.statusText);
-  this.statusText.position.set(400, 50);
 
   this.outputBar = new BarChart(830, 50, [0, 0, 0, 0, 0], [this.gameState.ENERGY_COLOR].concat(this.gameState.CITY_COLORS).concat(this.gameState.MISSING_ENERGY_COLOR), this.gameState.MAX_ENERGY);
   this.container.addChild(this.outputBar.drawable);
@@ -153,10 +157,10 @@ module.exports.prototype.render = function () {
     i = "City " + (this.gameState.cityId + 1);
     if (this.cityText.text != i) {
       this.cityText.setText(i);
-      this.cityText.setStyle({
-        font: "normal 50pt Arial",
-        fill: this.gameState.CITY_COLORS[this.gameState.cityId].toString(16)
-      });
+      this.cityBackground.clear();
+      this.cityBackground.beginFill(this.gameState.CITY_COLORS[this.gameState.cityId]);
+      this.cityBackground.drawRect(0, 0, 854, 100);
+      this.cityBackground.endFill();
     }
     //Update source type text
     text = "";

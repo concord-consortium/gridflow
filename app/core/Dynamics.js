@@ -15,7 +15,7 @@ module.exports.prototype.init = function () {
     [
       5 + Math.random(), //Wind
       null, //Solar
-      1 //Fossil
+      null //Fossil
     ],
     [
       2 + Math.random(), //Wind

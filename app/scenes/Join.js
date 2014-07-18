@@ -12,18 +12,22 @@ module.exports = function (gameState, stage) {
   this.blackoutRectangle = new PIXI.Graphics();
   this.container.addChild(this.blackoutRectangle);
 
+  this.cityBackground = new PIXI.Graphics();
+  this.container.addChild(this.cityBackground);
+
   this.cityText = new PIXI.Text("", {
     font: "normal 50pt Arial",
     fill: "#525252"
   });
+  this.cityText.position.set(10, 10);
   this.container.addChild(this.cityText);
 
   this.statusText = new PIXI.Text("", {
     font: "normal 30pt Arial",
     fill: "#525252"
   });
+  this.statusText.position.set(400, 10);
   this.container.addChild(this.statusText);
-  this.statusText.position.set(400, 0);
 
   this.placeholderText = new PIXI.Text("INSERT COOL JOINING\nSCREEN HERE", {
     font: "normal 50pt Arial",
@@ -85,18 +89,26 @@ module.exports.prototype.render = function () {
       return "play";
     }
     // Otherwise, continue rendering
+    this.cityBackground.clear();
     if (this.gameState.cityId != undefined) {
       this.readyButton.visible = true;
-      this.cityText.setStyle({
-        font: "normal 50pt Arial",
-        fill: this.gameState.CITY_COLORS[this.gameState.cityId].toString(16)
-      });
+      this.cityBackground.beginFill(this.gameState.CITY_COLORS[this.gameState.cityId]);
+      this.cityBackground.drawRect(0, 0, 854, 100);
+      this.cityBackground.endFill();
     }
     this.cityText.setText(this.gameState.cityId == undefined ? "" : "City " + (this.gameState.cityId + 1));
     this.statusText.setText(this.gameState.cityId == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready");
+
+
     if (this.gameState.globals != undefined && this.gameState.globals.status != null) {
       this.blackoutRectangle.clear();
-      this.blackoutRectangle.beginFill(this.gameState.globals.status === true ? 0xFFFFFF : 0x000000, 0.5);
+      if (this.gameState.globals.status === true) {
+        // Default, white background
+        this.blackoutRectangle.beginFill(0xFFFFFF, 0.9);
+      } else {
+        // Blackout
+        this.blackoutRectangle.beginFill(0x000000, 0.5);
+      }
       this.blackoutRectangle.drawRect(0, 0, 854, 1280);
       this.blackoutRectangle.endFill();
       if (this.gameState.globals.status === true) {
