@@ -195,7 +195,7 @@ module.exports.prototype.render = function () {
       flowButton.receiveText.setText("");
       this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
     } else {
-      flowButton.receiveText.setText("Receving " + contract.amount + "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.DAY_LENGTH) + "h left");
+      flowButton.receiveText.setText("Receiving " + contract.amount + "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.DAY_LENGTH) + "h left");
       this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
     }
     // Update sending text and I/O bars
