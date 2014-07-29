@@ -22,7 +22,7 @@ module.exports.prototype.pruneOutgoing = function () {
   var i, changed = false,
     elapsed = this.gameState.levelTimer.getElapsed();
   for (i = 0; i < this.gameState.currentCity.outgoing.length; i++) {
-    if (this.gameState.currentCity.outgoing[i].until != undefined && this.gameState.currentCity.outgoing[i].until <= elapsed) {
+    if (this.gameState.globals.currentLevel.contractLength >= 0 && this.gameState.currentCity.outgoing[i].until <= elapsed) {
       this.gameState.currentCity.outgoing.splice(i, 1);
       i--;
       changed = true;
@@ -69,10 +69,8 @@ module.exports.prototype.sendEnergy = function (dest) {
     if (this.send[dest] == null) {
       contract = {
         dest: dest,
-        amount: this.gameState.globals.currentLevel.energyPerContract
-      };
-      if (this.gameState.globals.currentLevel.contractLength >= 0) {
-        contract.until = elapsed + this.gameState.globals.currentLevel.contractLength;
+        amount: this.gameState.globals.currentLevel.energyPerContract,
+        until: this.gameState.globals.currentLevel.contractLength >= 0 ? elapsed + this.gameState.globals.currentLevel.contractLength : 0
       }
       this.gameState.currentCity.outgoing.push(contract);
     } else if (this.gameState.globals.currentLevel.maxEnergyPerContract <= 0 || this.send[dest].amount < this.gameState.globals.currentLevel.maxEnergyPerContract) {
@@ -98,7 +96,7 @@ module.exports.prototype.getEnergyFrom = function (city) {
   for (i = 0; i < cityData.outgoing.length; i++) {
     check = cityData.outgoing[i];
     //NOTE: Timecheck is removed to solve issues on desynced clocks.
-    if (check.dest === this.gameState.cityId) { // && (check.until == undefined || check.until > elapsed)) {
+    if (check.dest === this.gameState.cityId) { // && (this.gameState.globals.currentLevel.contractLength <=0 || check.until > elapsed)) {
       return check;
     }
   }
@@ -111,7 +109,7 @@ module.exports.prototype.getEnergyTo = function (city) {
   var i, check, elapsed = this.gameState.levelTimer.getElapsed();
   for (i = 0; i < this.gameState.currentCity.outgoing.length; i++) {
     check = this.gameState.currentCity.outgoing[i];
-    if (check.dest === city && (check.until == undefined || check.until > elapsed)) {
+    if (check.dest === city && (this.gameState.globals.currentLevel.contractLength <= 0 || check.until > elapsed)) {
       return check;
     }
   }

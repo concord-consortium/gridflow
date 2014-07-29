@@ -124,7 +124,7 @@ module.exports.prototype.render = function () {
           fill: "#" + this.gameState.CITY_COLORS[this.gameState.globals.status].toString(16)
         });
       }
-      this.readyButton.setText("AGAIN");
+      this.readyButton.setText("NEXT");
     }
   }
   if (this.gameState.currentCity != undefined) {

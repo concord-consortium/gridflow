@@ -187,7 +187,7 @@ module.exports.prototype.render = function () {
       flowButton.receiveText.setText("");
       this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
     } else {
-      flowButton.receiveText.setText("Receiving " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : ""));
+      flowButton.receiveText.setText("Receiving " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : this.gameState.globals.currentLevel.contractLength > 0 ? "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s" : ""));
       this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
     }
     // Update sending text and I/O bars
@@ -196,7 +196,7 @@ module.exports.prototype.render = function () {
       flowButton.sendText.setText("Tap to\nsend");
       this.inputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
     } else {
-      flowButton.sendText.setText("Sending " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : ""));
+      flowButton.sendText.setText("Sending " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : this.gameState.globals.currentLevel.contractLength > 0 ? "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s" : ""));
       this.inputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
     }
   }

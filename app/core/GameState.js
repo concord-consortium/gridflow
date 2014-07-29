@@ -9,8 +9,8 @@ module.exports = function () {
   this.sync = {};
   this.host = false;
   // Leveling (host only);
-  this.level = undefined;
-  this.levels = undefined;
+  this.level = 0;
+  this.levels = [require("levels/Level1"), require("levels/Level2")];
   // Joining
   this.uid = (Math.random() + Date.now()).toString();
   this.islandName = "";
@@ -76,9 +76,6 @@ module.exports.prototype.reconnect = function () {
       // Create new session
       this.host = true;
       this.cityId = 0;
-      // Start at level 0 and setup levels
-      this.level = 0;
-      this.levels = [require("levels/Level1")];
     } else {
       // Join existing session
       this.sync = val;
