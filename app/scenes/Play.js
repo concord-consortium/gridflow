@@ -103,14 +103,9 @@ module.exports = function (gameState, stage) {
 }
 // Renders the scene
 module.exports.prototype.render = function () {
-  var elapsed = Date.now() - this.gameState.startTime,
-    i, city, flowButton, contract, dayProgression, text;
-  if (elapsed < 0) {
-    elapsed = 0;
-    this.gameState.startTime -= elapsed;
-  }
-  //Start in middle of day.
-  elapsed += this.gameState.DAY_LENGTH / 2;
+  var elapsed, i, city, flowButton, contract, dayProgression, text, player;
+  this.gameState.levelTimer.cache();
+  elapsed = this.gameState.levelTimer.getElapsed();
   // Listen to the host and stop when the host does.
   if (this.gameState.hasUpdated && this.gameState.globals.playing === false) {
     this.gameState.resetCity();
@@ -118,7 +113,7 @@ module.exports.prototype.render = function () {
     return "join";
   }
   // Handle win
-  if (elapsed >= this.gameState.WIN_AFTER) {
+  if (elapsed >= this.gameState.globals.currentLevel.winAfter) {
     if (this.gameState.host === true) {
       this.gameState.resetCity(true);
       reset.call(this);
@@ -128,7 +123,6 @@ module.exports.prototype.render = function () {
     return;
   }
   // Update the flows for rendering
-  this.flow.setElapsed(elapsed);
   this.flow.pruneOutgoing();
   this.flow.computeFlow();
   //Handle lose for others
@@ -149,12 +143,13 @@ module.exports.prototype.render = function () {
   //If host, update all sources/dests
   if (this.gameState.host === true && elapsed >= this.lastUpdated + this.gameState.UPDATE_INTERVAL) {
     this.lastUpdated = elapsed;
-    this.gameState.dynamics.update(elapsed);
+    this.gameState.dynamics.update();
     this.gameState.syncCity();
   }
   // Rendering begins!
   if (this.gameState.hasUpdated) {
     i = "City " + (this.gameState.cityId + 1);
+    player = this.gameState.globals.currentLevel.players[this.gameState.cityId]
     if (this.cityText.text != i) {
       this.cityText.setText(i);
       this.cityBackground.clear();
@@ -164,16 +159,13 @@ module.exports.prototype.render = function () {
     }
     //Update source type text
     text = "";
-    for (i = 0; i < this.gameState.ENERGY_SOURCE_NAMES.length; i++) {
-      if (this.flow.getSources()[i] != null) {
-        if (text.length > 0) {
-          text += ", ";
-        }
-        text += this.gameState.ENERGY_SOURCE_NAMES[i];
+    for (i = 0; i < player.supply.length; i++) {
+      if (text.length > 0) {
+        text += ", ";
       }
+      text += player.supply[i].name;
     }
     this.inputTypeText.setText(text);
-
   }
   // Update flows and graphs
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
@@ -188,23 +180,23 @@ module.exports.prototype.render = function () {
       flowButton.setLabel(city + 1);
       flowButton.color = this.gameState.CITY_COLORS[city];
     }
-    flowButton.update(elapsed, this.gameState);
+    flowButton.update(this.gameState);
     // Update receiving text and I/O bars
     contract = this.flow.receive[city];
     if (contract == null) {
       flowButton.receiveText.setText("");
       this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
     } else {
-      flowButton.receiveText.setText("Receiving " + contract.amount + "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.DAY_LENGTH) + "h left");
+      flowButton.receiveText.setText("Receiving " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : ""));
       this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
     }
     // Update sending text and I/O bars
     contract = this.flow.send[city];
     if (contract == null) {
-      flowButton.sendText.setText("Tap to\nsend 1");
+      flowButton.sendText.setText("Tap to\nsend");
       this.inputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
     } else {
-      flowButton.sendText.setText("Sending " + contract.amount + "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.DAY_LENGTH) + "h left");
+      flowButton.sendText.setText("Sending " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : ""));
       this.inputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
     }
   }
@@ -224,7 +216,7 @@ module.exports.prototype.render = function () {
   //Handle that blackout
   if (this.flow.missing > 0) {
     if (this.blackoutImminent == null) {
-      this.blackoutImminent = elapsed + this.gameState.BLACKOUT_DELAY;
+      this.blackoutImminent = elapsed + this.gameState.globals.currentLevel.blackoutDelay;
     }
     if (elapsed >= this.blackoutImminent && this.gameState.currentCity.blackout == false) {
       //Lost
@@ -239,7 +231,7 @@ module.exports.prototype.render = function () {
       }
     }
     this.blackoutBar.drawable.visible = true;
-    this.blackoutBar.segmentValues[1] = Math.max(0, (this.blackoutImminent - elapsed) / this.gameState.BLACKOUT_DELAY);
+    this.blackoutBar.segmentValues[1] = Math.max(0, (this.blackoutImminent - elapsed) / this.gameState.globals.currentLevel.blackoutDelay);
     this.blackoutBar.segmentValues[0] = 1 - this.blackoutBar.segmentValues[1];
     this.blackoutBar.update();
   } else {
@@ -248,8 +240,9 @@ module.exports.prototype.render = function () {
   }
 
   //Update day text
-  dayProgression = elapsed / this.gameState.DAY_LENGTH;
-  this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24) % 12 + 1) + ":00 " + (dayProgression % 1 <= 0.5 ? "AM" : "PM"));
+  dayProgression = this.gameState.levelTimer.getDay();
+  this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24 + 11) % 12 + 1) + ":00 " + (dayProgression % 1 < 0.5 ? "AM" : "PM"));
+  this.gameState.levelTimer.unCache();
 }
 addFlowButtonListener = function (flowButton, i) {
   var that = this;

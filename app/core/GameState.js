@@ -2,11 +2,16 @@
  * GameState.js
  * An object to hold and synchronize data behind the game.
  */
-var Dynamics = require("core/Dynamics");
+var Dynamics = require("core/Dynamics"),
+  LevelTimer = require("core/LevelTimer");
 module.exports = function () {
   "use strict";
   this.sync = {};
   this.host = false;
+  // Leveling (host only);
+  this.level = undefined;
+  this.levels = undefined;
+  // Joining
   this.uid = (Math.random() + Date.now()).toString();
   this.islandName = "";
   // The numerical id (0-3) of the city
@@ -24,17 +29,13 @@ module.exports = function () {
   // A flag to update the current stage.
   this.hasUpdated = true;
   this.dynamics = new Dynamics(this);
+  this.levelTimer = new LevelTimer(this);
   // Constants
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
   this.ANIMATION_RATE = 0.05;
   // Time is all in milliseconds
-  this.DAY_LENGTH = 60 * 1000;
-  this.WIN_AFTER = 5 * this.DAY_LENGTH;
   this.UPDATE_INTERVAL = 2 * 1000;
-  this.ENERGY_SEND_LENGTH = 8 * this.DAY_LENGTH / 24;
-  this.ENERGY_PER_CONTRACT = 1;
-  this.BLACKOUT_DELAY = 8 * this.DAY_LENGTH / 24;
   this.ENERGY_COLOR = 0xfff36a;
   this.MISSING_ENERGY_COLOR = 0xff0000;
   this.EXTRA_ENERGY_COLOR = 0x00c617;
@@ -75,6 +76,9 @@ module.exports.prototype.reconnect = function () {
       // Create new session
       this.host = true;
       this.cityId = 0;
+      // Start at level 0 and setup levels
+      this.level = 0;
+      this.levels = [require("levels/Level1")];
     } else {
       // Join existing session
       this.sync = val;
@@ -166,22 +170,24 @@ module.exports.prototype.resetCity = function (status) {
   };
   // Host has extra metadata
   if (this.host === true) {
+    //Setup level
+    if (status === true && this.level < this.levels.length - 1) {
+      this.level++;
+    }
     this.globals = this.currentCity.globals = {
       // startTime is also used as an indicator of playing/not playing
       "playing": false,
       "startTime": null,
       // A cityId if a city blacked out, or true on win.
       "status": status === undefined ? null : status,
-      "timeOffset": [
-        Math.random(),
-        Math.random(),
-        Math.random(),
-        Math.random()
-      ],
-      // Energy sources and their max production
-      "supply": [],
-      // Average demand
-      "demand": []
+      // Energy sources per city
+      "supply": undefined,
+      // Demand per city
+      "demand": undefined,
+      // Level number
+      "level": this.level,
+      // Level object
+      "currentLevel": this.levels[this.level]
     }
     this.dynamics.init();
   } else {

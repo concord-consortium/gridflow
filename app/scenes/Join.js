@@ -97,7 +97,7 @@ module.exports.prototype.render = function () {
       this.cityBackground.endFill();
     }
     this.cityText.setText(this.gameState.cityId == undefined ? "" : "City " + (this.gameState.cityId + 1));
-    this.statusText.setText(this.gameState.cityId == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready");
+    this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready\nLevel " + (this.gameState.globals.level + 1));
 
 
     if (this.gameState.globals != undefined && this.gameState.globals.status != null) {

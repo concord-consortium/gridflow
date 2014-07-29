@@ -1,13 +1,12 @@
 /**
  * Flow.js
- * Computes energy flow and updates the UI with computation.
+ * Computes energy flow, contracts, and the like.
  */
 
 module.exports = function (gameState) {
   this.gameState = gameState;
   this.receive = {};
   this.send = {};
-  this.elapsed = null;
   this.sendSum = 0;
   this.receiveSum = 0;
   // How much from the power source actually used in the demand
@@ -17,15 +16,13 @@ module.exports = function (gameState) {
   // Missing energy from demand
   this.missing = 0;
 };
-module.exports.prototype.setElapsed = function (elapsed) {
-  this.elapsed = elapsed;
-}
-// Prune outgoing tree: e.g. remove expired requests
+// Prune outgoing tree: e.g. remove expired contracts
 module.exports.prototype.pruneOutgoing = function () {
   "use strict";
-  var i, changed = false;
+  var i, changed = false,
+    elapsed = this.gameState.levelTimer.getElapsed();
   for (i = 0; i < this.gameState.currentCity.outgoing.length; i++) {
-    if (this.gameState.currentCity.outgoing[i].until <= this.elapsed) {
+    if (this.gameState.currentCity.outgoing[i].until != undefined && this.gameState.currentCity.outgoing[i].until <= elapsed) {
       this.gameState.currentCity.outgoing.splice(i, 1);
       i--;
       changed = true;
@@ -67,19 +64,23 @@ module.exports.prototype.computeFlow = function () {
 
 module.exports.prototype.sendEnergy = function (dest) {
   "use strict";
-  var contract;
-  if (this.gameState.ENERGY_PER_CONTRACT <= this.extra + this.common) {
+  var contract, elapsed = this.gameState.levelTimer.getElapsed();
+  if (this.gameState.globals.currentLevel.energyPerContract <= this.extra + this.common) {
     if (this.send[dest] == null) {
       contract = {
         dest: dest,
-        until: this.elapsed + this.gameState.ENERGY_SEND_LENGTH,
-        amount: this.gameState.ENERGY_PER_CONTRACT
+        amount: this.gameState.globals.currentLevel.energyPerContract
       };
+      if (this.gameState.globals.currentLevel.contractLength >= 0) {
+        contract.until = elapsed + this.gameState.globals.currentLevel.contractLength;
+      }
       this.gameState.currentCity.outgoing.push(contract);
-    } else {
+    } else if (this.gameState.globals.currentLevel.maxEnergyPerContract <= 0 || this.send[dest].amount < this.gameState.globals.currentLevel.maxEnergyPerContract) {
       // Renew contract with more energy
-      this.send[dest].amount += this.gameState.ENERGY_PER_CONTRACT;
-      this.send[dest].until = this.elapsed + this.gameState.ENERGY_SEND_LENGTH;
+      this.send[dest].amount += this.gameState.globals.currentLevel.energyPerContract;
+      if (this.gameState.globals.currentLevel.contractLength >= 0) {
+        this.send[dest].until = elapsed + this.gameState.globals.currentLevel.contractLength;
+      }
     }
     this.gameState.syncCity();
     this.computeFlow();
@@ -90,13 +91,14 @@ module.exports.prototype.sendEnergy = function (dest) {
 module.exports.prototype.getEnergyFrom = function (city) {
   "use strict";
   var cityData = this.gameState.sync[city],
-    i, check;
+    i, check, elapsed = this.gameState.levelTimer.getElapsed();
   if (cityData.outgoing == undefined) {
     return null;
   }
   for (i = 0; i < cityData.outgoing.length; i++) {
     check = cityData.outgoing[i];
-    if (check.dest === this.gameState.cityId && check.until > this.elapsed) {
+    //NOTE: Timecheck is removed to solve issues on desynced clocks.
+    if (check.dest === this.gameState.cityId) { // && (check.until == undefined || check.until > elapsed)) {
       return check;
     }
   }
@@ -106,10 +108,10 @@ module.exports.prototype.getEnergyFrom = function (city) {
 // Returns the contract object for sending to a given city
 module.exports.prototype.getEnergyTo = function (city) {
   "use strict";
-  var i, check;
+  var i, check, elapsed = this.gameState.levelTimer.getElapsed();
   for (i = 0; i < this.gameState.currentCity.outgoing.length; i++) {
     check = this.gameState.currentCity.outgoing[i];
-    if (check.dest === city && check.until > this.elapsed) {
+    if (check.dest === city && (check.until == undefined || check.until > elapsed)) {
       return check;
     }
   }
@@ -124,10 +126,8 @@ module.exports.prototype.getTotalSource = function () {
   var sources = this.getSources(),
     total = 0,
     i;
-  for (i = 0; i < this.gameState.ENERGY_SOURCE_NAMES.length; i++) {
-    if (sources[i] != null) {
-      total += sources[i];
-    }
+  for (i = 0; i < sources.length; i++) {
+    total += sources[i];
   }
   return total;
 }
