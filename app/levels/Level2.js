@@ -33,7 +33,7 @@ module.exports = {
       supply: [
         {
           name: "Fossil",
-          amount: 5
+          amount: 6
         }
       ],
       relativeDemand: 4
@@ -42,7 +42,7 @@ module.exports = {
       supply: [
         {
           name: "Fossil",
-          amount: 3
+          amount: 5
         }
       ],
       relativeDemand: 4
@@ -52,7 +52,7 @@ module.exports = {
       supply: [
         {
           name: "Fossil",
-          amount: 5
+          amount: 2
         }
       ],
       relativeDemand: 4

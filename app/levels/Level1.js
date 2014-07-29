@@ -21,7 +21,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "",
           amount: 5
         }
       ],
@@ -32,7 +32,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "",
           amount: 3
         }
       ],
@@ -41,7 +41,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "",
           amount: 5
         }
       ],
@@ -51,7 +51,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "",
           amount: 3
         }
       ],
