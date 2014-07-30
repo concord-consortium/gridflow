@@ -39,7 +39,7 @@ module.exports = {
         {
           name: "Wind",
           type: "random",
-          amount: 3,
+          amount: 2,
           variation: 0.2,
           maxVariation: 1
         },
@@ -78,7 +78,7 @@ module.exports = {
         {
           name: "Fossil",
           type: "random",
-          amount: 2,
+          amount: 1,
           variation: 0.02,
           maxVariation: 1
         },

@@ -2,7 +2,6 @@ var GameState = require("core/GameState"),
   Join = require("scenes/Join"),
   Play = require("scenes/Play");
 
-
 var gameState = new GameState(),
   renderer = new PIXI.autoDetectRenderer(854, 1280),
   stage = new PIXI.Stage(0xFFFFFF),
@@ -44,3 +43,4 @@ animate = function () {
   requestAnimationFrame(animate);
 };
 requestAnimationFrame(animate);
+// gs = gameState;
