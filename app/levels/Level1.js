@@ -22,6 +22,7 @@ module.exports = {
       supply: [
         {
           name: "",
+          type: "fixed",
           amount: 5
         }
       ],
@@ -33,6 +34,7 @@ module.exports = {
       supply: [
         {
           name: "",
+          type: "fixed",
           amount: 3
         }
       ],
@@ -42,6 +44,7 @@ module.exports = {
       supply: [
         {
           name: "",
+          type: "fixed",
           amount: 5
         }
       ],
@@ -52,6 +55,7 @@ module.exports = {
       supply: [
         {
           name: "",
+          type: "fixed",
           amount: 3
         }
       ],

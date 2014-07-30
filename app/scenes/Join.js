@@ -3,6 +3,7 @@
  * A scene where the user is waiting for others to join.
  */
 module.exports = function (gameState, stage) {
+  "use strict";
   this.gameState = gameState;
 
   this.container = new PIXI.DisplayObjectContainer();
@@ -51,7 +52,7 @@ module.exports = function (gameState, stage) {
         that.gameState.currentCity.ready = true;
         that.gameState.syncCity();
       }
-  }
+  };
   this.readyButton.mouseup =
     this.readyButton.touchend =
     this.readyButton.mouseout = function () {
@@ -59,8 +60,8 @@ module.exports = function (gameState, stage) {
         that.gameState.currentCity.ready = false;
         that.gameState.syncCity();
       }
-  }
-}
+  };
+};
 // Renders the scene
 module.exports.prototype.render = function () {
   "use strict";
@@ -85,7 +86,7 @@ module.exports.prototype.render = function () {
     }
     // Start the game if everyone is ready
     if (this.gameState.globals != undefined && this.gameState.globals.playing === true && this.gameState.currentCity != undefined && this.gameState.currentCity.ready === true) {
-      this.gameState.startTime = Math.min(Date.now(), this.gameState.globals.startTime);
+      this.gameState.startTime = Math.max(Date.now(), this.gameState.globals.startTime);
       return "play";
     }
     // Otherwise, continue rendering
@@ -112,7 +113,7 @@ module.exports.prototype.render = function () {
       this.blackoutRectangle.drawRect(0, 0, 854, 1280);
       this.blackoutRectangle.endFill();
       if (this.gameState.globals.status === true) {
-        this.placeholderText.setText("YOU WIN!!!!!")
+        this.placeholderText.setText("YOU WIN!!!!!");
         this.placeholderText.setStyle({
           font: "normal 50pt Arial",
           fill: "#0fb45c"

@@ -40,6 +40,7 @@ module.exports = function (width, height) {
 };
 
 module.exports.prototype.setLabel = function (label) {
+  "use strict";
   this.centerLabel.setText(label);
 };
 /**

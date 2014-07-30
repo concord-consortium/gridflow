@@ -2,10 +2,13 @@
  * Dynamics.js
  * Changes supply and demand as time goes on.
  */
+var Utils = require("core/Utils");
 module.exports = function (gameState) {
+  "use strict";
   this.gameState = gameState;
 };
 module.exports.prototype.init = function () {
+  "use strict";
   var i, j;
   this.gameState.globals.supply = [];
   this.gameState.globals.demand = [];
@@ -13,9 +16,10 @@ module.exports.prototype.init = function () {
     this.gameState.globals.supply[i] = [];
   }
   this.update();
-}
+};
 module.exports.prototype.update = function () {
-  var i, j, supplyAmount, computedSupply, cycle = -Math.cos(2 * Math.PI * this.gameState.levelTimer.getDay()),
+  "use strict";
+  var i, j, supply, computedSupply, cycle = -Math.cos(2 * Math.PI * this.gameState.levelTimer.getDay()),
     totalSupply = 0,
     relativeDemand = 0,
     players = this.gameState.globals.currentLevel.players;
@@ -23,13 +27,28 @@ module.exports.prototype.update = function () {
   for (i = 0; i < players.length; i++) {
     for (j = 0; j < players[i].supply.length; j++) {
       computedSupply = 0;
-      supplyAmount = players[i].supply[j].amount;
-      if (typeof supplyAmount === "number") {
-        computedSupply = supplyAmount;
+      supply = players[i].supply[j];
+      // Amount types, such as solar cycle based or random based
+      if (supply.type == "fixed") {
+        computedSupply = supply.amount;
+      } else if (supply.type == "random") {
+        if (this.gameState.globals.supply[i][j] === undefined) {
+          computedSupply = supply.amount;
+        } else {
+          computedSupply = Utils.clamp(this.gameState.globals.supply[i][j] + (Math.random() * 2 - 1) * supply.variation, supply.amount - supply.maxVariation, supply.amount + supply.maxVariation);
+        }
+      } else if (supply.type == "cycle") {
+        computedSupply = supply.amount + cycle * supply.variation;
       }
-      // TODO: Add more amount types, such as solar cycle based or random based
       this.gameState.globals.supply[i][j] = computedSupply;
-      totalSupply += computedSupply;
+      if (this.gameState.sync[i] != null) {
+        // Difficulty scaling
+        totalSupply += computedSupply;
+      }
+    }
+    totalSupply = Math.floor(totalSupply);
+    if (this.gameState.sync[i] != null) {
+      // Difficulty scaling
       relativeDemand += players[i].relativeDemand;
     }
   }
@@ -55,4 +74,4 @@ module.exports.prototype.update = function () {
     }
     this.gameState.globals.demand[i] = this.baseDemand[i] + cycle + 0.5 * elapsed / this.gameState.DAY_LENGTH;
   }*/
-}
+};

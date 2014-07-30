@@ -7,10 +7,7 @@
  * with a value of maxSegmentValue will be the entire width
  * of the BarChart.
  */
-var clamp = function (n, min, max) {
-  "use strict";
-  return n < min ? min : n > max ? max : n;
-};
+var Utils = require("core/Utils");
 
 module.exports = function (width, height, segmentValues, segmentColors, maxSegmentValue) {
   "use strict";
@@ -34,7 +31,7 @@ module.exports.prototype.update = function () {
   for (i = 0; i < this.segmentValues.length; i++) {
     this.drawable.beginFill(this.segmentColors[i]);
     segmentWidth = this.width * this.segmentValues[i] / this.maxSegmentValue;
-    this.drawable.drawRect(previous, 0, clamp(segmentWidth, 0, this.width - previous), this.height);
+    this.drawable.drawRect(previous, 0, Utils.clamp(segmentWidth, 0, this.width - previous), this.height);
     previous += segmentWidth;
     this.drawable.endFill();
   }

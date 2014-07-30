@@ -4,7 +4,8 @@
  */
 var BarChart = require("components/BarChart"),
   FlowButton = require("components/FlowButton"),
-  Flow = require("core/Flow");
+  Flow = require("core/Flow"),
+  Utils = require("core/Utils");
 var addFlowButtonListener, reset;
 module.exports = function (gameState, stage) {
   var i;
@@ -185,28 +186,28 @@ module.exports.prototype.render = function () {
     contract = this.flow.receive[city];
     if (contract == null) {
       flowButton.receiveText.setText("");
-      this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
+      this.outputBar.segmentValues[city + 1] = Utils.lerp(this.outputBar.segmentValues[city + 1], 0, this.gameState.ANIMATION_RATE);
     } else {
       flowButton.receiveText.setText("Receiving " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : this.gameState.globals.currentLevel.contractLength > 0 ? "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s" : ""));
-      this.outputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.outputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
+      this.outputBar.segmentValues[city + 1] = Utils.lerp(this.outputBar.segmentValues[city + 1], contract.amount, this.gameState.ANIMATION_RATE);
     }
     // Update sending text and I/O bars
     contract = this.flow.send[city];
     if (contract == null) {
       flowButton.sendText.setText("Tap to\nsend");
-      this.inputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * 0;
+      this.inputBar.segmentValues[city + 1] = Utils.lerp(this.inputBar.segmentValues[city + 1], 0, this.gameState.ANIMATION_RATE);
     } else {
       flowButton.sendText.setText("Sending " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : this.gameState.globals.currentLevel.contractLength > 0 ? "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s" : ""));
-      this.inputBar.segmentValues[city + 1] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[city + 1] + this.gameState.ANIMATION_RATE * contract.amount;
+      this.inputBar.segmentValues[city + 1] = Utils.lerp(this.inputBar.segmentValues[city + 1], contract.amount, this.gameState.ANIMATION_RATE);
     }
   }
   // Yum. Gotta update all those bars.
-  this.inputBar.segmentValues[0] = this.outputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.inputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * this.flow.common;
-  this.totalOutputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.totalOutputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * (this.flow.getTotalDemand() - this.flow.missing);
-  this.totalOutputBar.segmentValues[1] = (1 - this.gameState.ANIMATION_RATE) * this.totalOutputBar.segmentValues[1] + this.gameState.ANIMATION_RATE * this.flow.missing;
-  this.totalInputBar.segmentValues[0] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[0] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[0] || 0);
-  this.totalInputBar.segmentValues[1] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[1] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[1] || 0);
-  this.totalInputBar.segmentValues[2] = (1 - this.gameState.ANIMATION_RATE) * this.totalInputBar.segmentValues[2] + this.gameState.ANIMATION_RATE * (this.flow.getSources()[2] || 0);
+  this.inputBar.segmentValues[0] = this.outputBar.segmentValues[0] = Utils.lerp(this.inputBar.segmentValues[0], this.flow.common, this.gameState.ANIMATION_RATE);
+  this.totalOutputBar.segmentValues[0] = Utils.lerp(this.totalOutputBar.segmentValues[0], (this.flow.getTotalDemand() - this.flow.missing), this.gameState.ANIMATION_RATE);
+  this.totalOutputBar.segmentValues[1] = Utils.lerp(this.totalOutputBar.segmentValues[1], this.flow.missing, this.gameState.ANIMATION_RATE);
+  this.totalInputBar.segmentValues[0] = Utils.lerp(this.totalInputBar.segmentValues[0], (this.flow.getSources()[0] || 0), this.gameState.ANIMATION_RATE);
+  this.totalInputBar.segmentValues[1] = Utils.lerp(this.totalInputBar.segmentValues[1], (this.flow.getSources()[1] || 0), this.gameState.ANIMATION_RATE);
+  this.totalInputBar.segmentValues[2] = Utils.lerp(this.totalInputBar.segmentValues[2], (this.flow.getSources()[2] || 0), this.gameState.ANIMATION_RATE);
 
   this.inputBar.update();
   this.outputBar.update();

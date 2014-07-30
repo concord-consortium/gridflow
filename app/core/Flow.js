@@ -4,11 +4,16 @@
  */
 
 module.exports = function (gameState) {
+  "use strict";
   this.gameState = gameState;
   this.receive = {};
   this.send = {};
+  // The total energy sent
   this.sendSum = 0;
+  // THe total amount of energy received
   this.receiveSum = 0;
+  // THe total amount of energy
+  this.supplySum = 0;
   // How much from the power source actually used in the demand
   this.common = 0;
   // Extra energy generated
@@ -55,6 +60,7 @@ module.exports.prototype.computeFlow = function () {
     this.receive[i] = from;
     this.send[i] = to;
   }
+
   this.extra = this.getTotalSource() - this.sendSum;
   demand = Math.max(0, this.getTotalDemand() - this.receiveSum);
   this.common = Math.min(this.extra, demand);
@@ -71,7 +77,7 @@ module.exports.prototype.sendEnergy = function (dest) {
         dest: dest,
         amount: this.gameState.globals.currentLevel.energyPerContract,
         until: this.gameState.globals.currentLevel.contractLength >= 0 ? elapsed + this.gameState.globals.currentLevel.contractLength : 0
-      }
+      };
       this.gameState.currentCity.outgoing.push(contract);
     } else if (this.gameState.globals.currentLevel.maxEnergyPerContract <= 0 || this.send[dest].amount < this.gameState.globals.currentLevel.maxEnergyPerContract) {
       // Renew contract with more energy
@@ -101,7 +107,7 @@ module.exports.prototype.getEnergyFrom = function (city) {
     }
   }
   return null;
-}
+};
 
 // Returns the contract object for sending to a given city
 module.exports.prototype.getEnergyTo = function (city) {
@@ -114,13 +120,15 @@ module.exports.prototype.getEnergyTo = function (city) {
     }
   }
   return null;
-}
+};
 
 //Get source energy
 module.exports.prototype.getSources = function () {
+  "use strict";
   return this.gameState.globals.supply[this.gameState.cityId];
-}
+};
 module.exports.prototype.getTotalSource = function () {
+  "use strict";
   var sources = this.getSources(),
     total = 0,
     i;
@@ -128,9 +136,10 @@ module.exports.prototype.getTotalSource = function () {
     total += sources[i];
   }
   return total;
-}
+};
 
 //Get demand energy
 module.exports.prototype.getTotalDemand = function () {
+  "use strict";
   return this.gameState.globals.demand[this.gameState.cityId];
-}
+};

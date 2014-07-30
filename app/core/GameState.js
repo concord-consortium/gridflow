@@ -10,7 +10,7 @@ module.exports = function () {
   this.host = false;
   // Leveling (host only);
   this.level = 0;
-  this.levels = [require("levels/Level1"), require("levels/Level2")];
+  this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3")];
   // Joining
   this.uid = (Math.random() + Date.now()).toString();
   this.islandName = "";
@@ -64,9 +64,10 @@ module.exports.prototype.connect = function (islandName) {
   this.islandName = islandName;
   this.firebase = new Firebase(this.FIREBASE_URL + this.islandName);
   this.reconnect();
-}
+};
 //Connects to or creates an existing session.
 module.exports.prototype.reconnect = function () {
+  "use strict";
   this.firebase.once("value", function (data) {
     var val = data.val(),
       i;
@@ -101,6 +102,9 @@ module.exports.prototype.reconnect = function () {
 }
 //Removes listeners and the data from the server.
 module.exports.prototype.disconnect = function (soft) {
+  "use strict";
+  var i;
+  this.host = false;
   if (!soft && this.cityId != undefined) {
     this.firebase.child(this.cityId).set(null);
   }
@@ -111,6 +115,7 @@ module.exports.prototype.disconnect = function (soft) {
 }
 // Returns total number of connected cities
 module.exports.prototype.countCities = function (cityNumber) {
+  "use strict";
   var i, sum = 0;
   for (i = 0; i < this.MAX_CITIES; i++) {
     if (this.sync[i] != undefined) {
@@ -121,38 +126,41 @@ module.exports.prototype.countCities = function (cityNumber) {
 }
 // Sync the current city to the other cities
 module.exports.prototype.syncCity = function () {
+  "use strict";
   this.firebase.child(this.cityId).set(this.sync[this.cityId]);
   this.hasUpdated = true;
 }
 // Listen for changes in the other cities
 var addCityListener = function (city) {
-    this.firebase.child(city).on("value", function (data) {
-      var val = data.val();
-      if (city === this.cityId) {
-        if (val !== null && val.uid !== this.uid) {
-          console.warn("Concurrent error.");
-          this.disconnect(true);
-          this.reconnect();
-          return;
-        }
-      } else {
-        this.sync[city] = val;
-        if (this.sync[0] == undefined) {
-          // Host disconnected!
-          console.warn("Host disconnected!");
-          this.disconnect();
-          this.reconnect();
-          return;
-        }
-        if (city === 0) {
-          this.globals = this.sync[0].globals;
-        }
-        this.hasUpdated = true;
+  "use strict";
+  this.firebase.child(city).on("value", function (data) {
+    var val = data.val();
+    if (city === this.cityId) {
+      if (val !== null && val.uid !== this.uid) {
+        console.warn("Concurrent error.");
+        this.disconnect(true);
+        this.reconnect();
+        return;
       }
-    }, this);
-  }
-  // Resets the city for the beginning of a game
+    } else {
+      this.sync[city] = val;
+      if (this.sync[0] == undefined) {
+        // Host disconnected!
+        console.warn("Host disconnected!");
+        this.disconnect();
+        this.reconnect();
+        return;
+      }
+      if (city === 0) {
+        this.globals = this.sync[0].globals;
+      }
+      this.hasUpdated = true;
+    }
+  }, this);
+};
+// Resets the city for the beginning of a game
 module.exports.prototype.resetCity = function (status) {
+  "use strict";
   // Reset some variables
   this.startTime = undefined;
   // Set up the city
@@ -178,18 +186,18 @@ module.exports.prototype.resetCity = function (status) {
       // A cityId if a city blacked out, or true on win.
       "status": status === undefined ? null : status,
       // Energy sources per city
-      "supply": undefined,
+      "supply": null,
       // Demand per city
-      "demand": undefined,
+      "demand": null,
       // Level number
       "level": this.level,
       // Level object
       "currentLevel": this.levels[this.level]
-    }
+    };
     this.dynamics.init();
   } else {
     this.currentCity.globals = null;
   }
   this.hasUpdated = true;
   this.syncCity();
-}
+};
