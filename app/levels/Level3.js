@@ -46,9 +46,9 @@ module.exports = {
         {
           name: "Solar",
           type: "cycle",
-          amount: 1,
+          amount: 2,
           // cycle is computed the amount + cos(time) * variation.
-          variation: 1
+          variation: 2
         }
       ],
       relativeDemand: 4

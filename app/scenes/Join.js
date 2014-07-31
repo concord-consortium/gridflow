@@ -2,6 +2,8 @@
  * Join.js
  * A scene where the user is waiting for others to join.
  */
+var CityIcon = require("components/CityIcon");
+
 module.exports = function (gameState, stage) {
   "use strict";
   this.gameState = gameState;
@@ -13,29 +15,24 @@ module.exports = function (gameState, stage) {
   this.blackoutRectangle = new PIXI.Graphics();
   this.container.addChild(this.blackoutRectangle);
 
-  this.cityBackground = new PIXI.Graphics();
-  this.container.addChild(this.cityBackground);
-
-  this.cityText = new PIXI.Text("", {
-    font: "normal 50pt Arial",
-    fill: "#525252"
-  });
-  this.cityText.position.set(10, 10);
-  this.container.addChild(this.cityText);
+  this.cityIcon = new CityIcon();
+  this.cityIcon.drawable.position.set(171, 650);
+  this.cityIcon.iconBorder.visible = true;
+  this.container.addChild(this.cityIcon.drawable);
 
   this.statusText = new PIXI.Text("", {
     font: "normal 30pt Arial",
     fill: "#525252"
   });
-  this.statusText.position.set(400, 10);
+  this.statusText.position.set(10, 10);
   this.container.addChild(this.statusText);
 
-  this.placeholderText = new PIXI.Text("INSERT COOL JOINING\nSCREEN HERE", {
+  this.placeholderText = new PIXI.Text("", {
     font: "normal 50pt Arial",
     fill: "#525252"
   });
   this.container.addChild(this.placeholderText);
-  this.placeholderText.position.set(10, 500);
+  this.placeholderText.position.set(10, 120);
 
   this.readyButton = new PIXI.Text("READY", {
     font: "normal 100pt Arial",
@@ -90,14 +87,10 @@ module.exports.prototype.render = function () {
       return "play";
     }
     // Otherwise, continue rendering
-    this.cityBackground.clear();
     if (this.gameState.cityId != undefined) {
       this.readyButton.visible = true;
-      this.cityBackground.beginFill(this.gameState.CITY_COLORS[this.gameState.cityId]);
-      this.cityBackground.drawRect(0, 0, 854, 100);
-      this.cityBackground.endFill();
+      this.cityIcon.iconBorder.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
     }
-    this.cityText.setText(this.gameState.cityId == undefined ? "" : "City " + (this.gameState.cityId + 1));
     this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready\nLevel " + (this.gameState.globals.level + 1));
 
 
@@ -118,14 +111,15 @@ module.exports.prototype.render = function () {
           font: "normal 50pt Arial",
           fill: "#0fb45c"
         });
+        this.readyButton.setText("NEXT");
       } else {
         this.placeholderText.setText("City " + (this.gameState.globals.status + 1) + " BLACKED OUT.");
         this.placeholderText.setStyle({
           font: "normal 50pt Arial",
           fill: "#" + this.gameState.CITY_COLORS[this.gameState.globals.status].toString(16)
         });
+        this.readyButton.setText("RETRY");
       }
-      this.readyButton.setText("NEXT");
     }
   }
   if (this.gameState.currentCity != undefined) {

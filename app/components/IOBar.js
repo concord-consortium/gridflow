@@ -9,6 +9,7 @@ module.exports = function (width, height, maxEnergy) {
   this.height = height || 0;
   this.maxEnergy = maxEnergy || 0;
   this.supply = 0;
+  this.supplyRounded = 0;
   this.demand = 0;
   // The gap between distinct energy units
   this.gap = 6;
@@ -29,7 +30,7 @@ module.exports.prototype.update = function () {
   this.drawable.beginFill(0xAAAAAA);
   this.drawable.drawRect(0, 0, this.supply * this.width / this.maxEnergy, this.height);
   this.drawable.endFill();
-  for (i = 0; i <= this.supply - 1; i++) {
+  for (i = 0; i < this.supplyRounded; i++) {
     this.drawable.beginFill(0x000000);
     this.drawable.drawRect(i * this.width / this.maxEnergy, 0, this.width / this.maxEnergy - this.gap, this.height);
     this.drawable.endFill();

@@ -9,7 +9,7 @@ module.exports = function () {
   this.sync = {};
   this.host = false;
   // Leveling (host only);
-  this.level = 0;
+  this.level = 2;
   this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3")];
   // Joining
   this.uid = (Math.random() + Date.now()).toString();
@@ -166,7 +166,7 @@ module.exports.prototype.resetCity = function (status) {
   // Set up the city
   this.currentCity = this.sync[this.cityId] = {
     // Whether the "ready" button is pressed
-    "ready": false,
+    "ready": true,
     // Outgoing energy
     "outgoing": [],
     // Whether or not the city has blacked out

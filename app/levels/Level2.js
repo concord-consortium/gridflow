@@ -35,7 +35,7 @@ module.exports = {
         {
           name: "Fossil",
           type: "fixed",
-          amount: 6
+          amount: 5
         }
       ],
       relativeDemand: 4
@@ -45,7 +45,7 @@ module.exports = {
         {
           name: "Fossil",
           type: "fixed",
-          amount: 5
+          amount: 6
         }
       ],
       relativeDemand: 4
