@@ -1,12 +1,12 @@
 module.exports = {
   // The number of milliseconds after which a game is won.
-  winAfter: 90000,
+  winAfter: 112500,
   //The amount of time(milliseconds) before a blackout
-  blackoutDelay: 10000,
+  blackoutDelay: 15000,
   // The starting time of day, 0<=t<1. 0 is 12:00 am, 0.5 is 12:00 pm.
   startTime: 0.5,
   // The length of a day in milliseconds, or a negative number for frozen time.
-  dayLength: 30000,
+  dayLength: 45000,
   // The amount of energy transferred by each contract.
   energyPerContract: 1,
   // The maximum energy in a contract made with a city.
@@ -14,7 +14,7 @@ module.exports = {
   maxEnergyPerContract: 1,
   // The amount of time in milliseconds that a contract remains open
   // Use a non-positive number for infinite time.
-  contractLength: 10000,
+  contractLength: 15000,
   // The amount of extra energy floating around
   extraEnergy: 1,
   players: [

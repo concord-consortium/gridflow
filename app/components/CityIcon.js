@@ -1,7 +1,7 @@
 /**
  * CityIcon.js
  * Displays a clickable city, optionally with lights!
- * (Typed with Dvorak!)
+ * (Mostly typed with Dvorak!)
  */
 var width = 512,
   height = 336;

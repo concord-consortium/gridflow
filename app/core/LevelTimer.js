@@ -7,7 +7,7 @@ module.exports = function (gameState) {
   this.gameState = gameState;
   this.elapsed = 0;
   this.day = 0;
-  this.useCache = true;
+  this.useCache = false;
 };
 // Caches all timing info for fast access within a frame.
 module.exports.prototype.cache = function () {
@@ -36,7 +36,6 @@ module.exports.prototype.getElapsed = function () {
   elapsed = Date.now() - this.gameState.startTime;
   if (elapsed < 0) {
     elapsed = 0;
-    this.gameState.startTime -= elapsed;
   }
   return elapsed;
 };

@@ -2,16 +2,16 @@
  * A scene of active play.
  *
  */
-var BarChart = require("components/BarChart"),
-  IOBar = require("components/IOBar"),
-  FlowButton = require("components/FlowButton"),
+var IOBar = require("components/IOBar"),
   VisualClock = require("components/VisualClock"),
   Flow = require("core/Flow"),
   Utils = require("core/Utils"),
-  CityIcon = require("components/CityIcon");
+  CityIcon = require("components/CityIcon"),
+  ContractLine = require("components/ContractLine");
 var addCityButtonListener, reset;
 module.exports = function (gameState, stage) {
-  var i, cityIcon;
+  "use strict";
+  var i, cityIcon, line;
   this.gameState = gameState;
   this.flow = new Flow(gameState);
   this.lastUpdated = 0;
@@ -40,11 +40,9 @@ module.exports = function (gameState, stage) {
   this.container.addChild(this.totalInputBar.drawable);
   this.totalInputBar.drawable.position.set(12, 1020);
 
-  this.inputTypeText = new PIXI.Text("", {
-    font: "normal 50pt Arial"
-  });
-  this.container.addChild(this.inputTypeText);
-  this.inputTypeText.position.set(10, 1150);
+  this.inputTypes = new PIXI.DisplayObjectContainer();
+  this.container.addChild(this.inputTypes);
+  this.inputTypes.position.set(10, 1120);
   //  this.loseButton = new PIXI.Text("Insta-lose", {
   //    font: "normal 70pt Arial",
   //    fill: "#f00"
@@ -60,21 +58,33 @@ module.exports = function (gameState, stage) {
   //      that.gameState.syncCity();
   //  }
 
-  // Flows are the buttons that symbolize each city and it's energy flow.
-  this.flows = [null, null, null];
+  // Setup city icons
+  this.cityIcons = [null, null, null];
+  // The contractLines array is interleaved: from, to, from, to, from, to.
+  this.contractLines = [null, null, null, null, null, null];
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
+    // Create and add city icon
     cityIcon = new CityIcon();
-    this.flows[i] = cityIcon;
+    this.cityIcons[i] = cityIcon;
     cityIcon.icon.visible = true;
     cityIcon.icon.width = cityIcon.icon.height = 265;
-    cityIcon.drawable.position.set(15 + 280 * i, 150);
+    cityIcon.drawable.position.set(15 + 280 * i, 50);
     this.container.addChild(cityIcon.drawable);
     addCityButtonListener.call(this, cityIcon.drawable, i);
+
+    // Create and add contract lines
+    line = new ContractLine(307 + 150 * i, 620, 185 + 280 * i, 270);
+    this.contractLines[2 * i] = line;
+    this.container.addChild(line.drawable);
+
+    line = new ContractLine(125 + 280 * i, 270, 247 + 150 * i, 620);
+    this.contractLines[2 * i + 1] = line;
+    this.container.addChild(line.drawable);
   }
-}
+};
 // Renders the scene
 module.exports.prototype.render = function () {
-  var elapsed, i, city, flowButton, contract, dayProgression, text, player;
+  var elapsed, i, j, supplyIndex, city, cityIcon, contractLine, contract, dayProgression, player, icon;
   this.gameState.levelTimer.cache();
   elapsed = this.gameState.levelTimer.getElapsed();
   // Listen to the host and stop when the host does.
@@ -93,7 +103,7 @@ module.exports.prototype.render = function () {
     // Prevent any rendering/updates and wait for host to win
     return;
   }
-  // Update the flows for rendering
+  // Update flow for rendering
   this.flow.pruneOutgoing();
   this.flow.computeFlow();
   //Handle lose for others
@@ -119,47 +129,65 @@ module.exports.prototype.render = function () {
   }
   // Rendering begins!
   if (this.gameState.hasUpdated) {
+    // Hmm... just in case.
+    if (this.gameState.startTime == undefined) {
+      this.gameState.startTime = this.gameState.globals.startTime + this.gameState.timeCorrectionFactor;
+    }
     // City color!
     this.cityIcon.icon.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
-    player = this.gameState.globals.currentLevel.players[this.gameState.cityId]
+    player = this.gameState.globals.currentLevel.players[this.gameState.cityId];
     //Update source type text
-    text = "";
-    for (i = 0; i < player.supply.length; i++) {
-      if (text.length > 0) {
-        text += ", ";
-      }
-      text += player.supply[i].name;
+    //Shrink or grow the inputTypes children to match the current number of input types
+    while (this.inputTypes.children.length > player.supply.length) {
+      this.inputTypes.removeChild(this.inputTypes.children[this.inputTypes.children.length - 1]);
     }
-    this.inputTypeText.setText(text);
+    for (i = 0; i < player.supply.length; i++) {
+      supplyIndex = this.gameState.ENERGY_SOURCE_NAMES.indexOf(player.supply[i].name);
+      if (supplyIndex >= 0) {
+        if (i >= this.inputTypes.children.length) {
+          this.inputTypes.addChild(icon = new PIXI.Sprite(this.gameState.ENERGY_SOURCE_ICONS[supplyIndex]))
+        } else {
+          icon = this.inputTypes.children[i];
+          icon.texture = this.gameState.ENERGY_SOURCE_ICONS[supplyIndex];
+        }
+        icon.tint = this.gameState.ENERGY_SOURCE_COLORS[supplyIndex];
+        icon.position.x = 150 * i;
+      }
+    }
   }
-  // Update flows and graphs
+  // Update city icons and graphs
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
     city = i >= this.gameState.cityId ? i + 1 : i,
-    flowButton = this.flows[i];
+    cityIcon = this.cityIcons[i];
     if (this.gameState.sync[city] == undefined) {
-      flowButton.drawable.visible = false;
+      cityIcon.drawable.visible = false;
+      this.contractLines[2 * i].drawable.visible = false;
+      this.contractLines[2 * i + 1].drawable.visible = false;
       continue;
     }
     if (this.gameState.hasUpdated) {
-      flowButton.drawable.visible = true;
-      //flowButton.setLabel(city + 1);
-      flowButton.icon.tint = this.gameState.CITY_COLORS[city];
+      cityIcon.drawable.visible = true;
+      cityIcon.icon.tint = this.gameState.CITY_COLORS[city];
     }
-    /*flowButton.update(this.gameState);
-    // Update receiving text and I/O bars
-    contract = this.flow.receive[city];
-    if (contract == null) {
-      flowButton.receiveText.setText("");
-    } else {
-      flowButton.receiveText.setText("Receiving " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : this.gameState.globals.currentLevel.contractLength > 0 ? "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s" : ""));
+    //flowButton.update();
+    // Update contract lines
+    for (j = 0; j < 2; j++) {
+      contract = j == 0 ? this.flow.send[city] : this.flow.receive[city];
+      contractLine = this.contractLines[2 * i + j];
+      if (this.gameState.hasUpdated) {
+        contractLine.drawable.visible = true;
+        contractLine.color = this.gameState.CITY_COLORS[city];
+      }
+      if (contract == null) {
+        contractLine.active = false;
+      } else {
+        contractLine.active = true;
+        contractLine.amount = contract.amount;
+        contractLine.progress = this.gameState.globals.currentLevel.contractLength > 0 ? Utils.clamp((contract.until - elapsed) / this.gameState.globals.currentLevel.contractLength, 0, 1) : 1;
+      }
+      contractLine.elapsed = elapsed;
+      contractLine.update();
     }
-    // Update sending text and I/O bars
-    contract = this.flow.send[city];
-    if (contract == null) {
-      flowButton.sendText.setText("Tap to\nsend");
-    } else {
-      flowButton.sendText.setText("Sending " + contract.amount + (this.gameState.globals.currentLevel.dayLength > 0 ? "\n" + Math.ceil(24 * (contract.until - elapsed) / this.gameState.globals.currentLevel.dayLength) + "h left" : this.gameState.globals.currentLevel.contractLength > 0 ? "\n" + Math.ceil((contract.until - elapsed) / 1000) + "s" : ""));
-    }*/
   }
   // Yum. Gotta update all those bars.
   this.totalInputBar.demand = Utils.lerp(this.totalInputBar.demand, this.flow.getTotalDemand(), this.gameState.ANIMATION_RATE);
@@ -185,29 +213,31 @@ module.exports.prototype.render = function () {
       }
     }
     this.cityIcon.lightPercentage = Utils.clamp((this.blackoutImminent - elapsed) / this.gameState.globals.currentLevel.blackoutDelay, 0, 1);
-    this.cityIcon.iconLights.tint = Utils.lerpColor(0xFFFFFF, 0xFF00000, (elapsed % 400 < 200 ? 1 : 0) * Utils.clamp(10 - 20 * this.cityIcon.lightPercentage, 0, 1));
+    this.cityIcon.iconLights.tint = elapsed % 400 <= 200 && this.cityIcon.lightPercentage < 0.31 ? 0xFF00000 : 0xFFFFFF
+    // The commented code is too performance-inefficient in canvas:
+    // Utils.lerpColor(0xFFFFFF, 0xFF00000, (elapsed % 400 < 200 ? 1 : 0) * Utils.clamp(3 - 10 * this.cityIcon.lightPercentage, 0, 1));
   } else {
     this.cityIcon.lightPercentage = 1;
     this.cityIcon.iconLights.tint = 0xFFFFFF;
     this.blackoutImminent = null;
   }
   this.cityIcon.update();
-  //Update day text
+  //Update day progression
   dayProgression = this.gameState.levelTimer.getDay();
-  this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24 + 11) % 12 + 1) + ":00 " + (dayProgression % 1 < 0.5 ? "AM" : "PM"));
+  //this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24 + 11) % 12 + 1) + ":00 " + (dayProgression % 1 < 0.5 ? "AM" : "PM"));
   this.visualClock.day = dayProgression;
   this.visualClock.update();
   this.gameState.levelTimer.unCache();
-}
+};
 addCityButtonListener = function (cityButton, i) {
   var that = this;
   cityButton.click =
     cityButton.tap = function () {
       var city = i >= that.gameState.cityId ? i + 1 : i;
       that.flow.sendEnergy(city);
-  }
-}
+  };
+};
 reset = function () {
   this.blackoutImminent = null;
   this.lastUpdated = 0;
-}
+};

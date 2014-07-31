@@ -18,10 +18,9 @@ module.exports = function (gameState, stage) {
   this.cityIcon = new CityIcon();
   this.cityIcon.drawable.position.set(171, 650);
   this.cityIcon.iconBorder.visible = true;
-  this.container.addChild(this.cityIcon.drawable);
 
   this.statusText = new PIXI.Text("", {
-    font: "normal 30pt Arial",
+    font: "normal 40pt Arial",
     fill: "#525252"
   });
   this.statusText.position.set(10, 10);
@@ -39,20 +38,25 @@ module.exports = function (gameState, stage) {
     fill: "#525252"
   });
   this.readyButton.visible = false;
-  this.container.addChild(this.readyButton);
   this.readyButton.position.set(200, 1000);
-  this.readyButton.interactive = true;
+
+  this.readyContainer = new PIXI.DisplayObjectContainer();
+  this.readyContainer.interactive = true;
+  this.readyContainer.addChild(this.readyButton);
+  this.readyContainer.addChild(this.cityIcon.drawable);
+  this.container.addChild(this.readyContainer);
+
   var that = this;
-  this.readyButton.mousedown =
-    this.readyButton.touchstart = function () {
+  this.readyContainer.mousedown =
+    this.readyContainer.touchstart = function () {
       if (that.gameState.currentCity != undefined && that.gameState.globals != undefined) {
         that.gameState.currentCity.ready = true;
         that.gameState.syncCity();
       }
   };
-  this.readyButton.mouseup =
-    this.readyButton.touchend =
-    this.readyButton.mouseout = function () {
+  this.readyContainer.mouseup =
+    this.readyContainer.touchend =
+    this.readyContainer.mouseout = function () {
       if (that.gameState.currentCity != undefined && that.gameState.globals != undefined) {
         that.gameState.currentCity.ready = false;
         that.gameState.syncCity();
@@ -82,17 +86,21 @@ module.exports.prototype.render = function () {
       }
     }
     // Start the game if everyone is ready
-    if (this.gameState.globals != undefined && this.gameState.globals.playing === true && this.gameState.currentCity != undefined && this.gameState.currentCity.ready === true) {
-      this.gameState.startTime = Math.max(Date.now(), this.gameState.globals.startTime);
+    if (this.gameState.globals != undefined &&
+      this.gameState.globals.playing === true &&
+      this.gameState.currentCity != undefined &&
+      this.gameState.currentCity.ready === true) {
+      this.gameState.startTime = this.gameState.globals.startTime + this.gameState.timeCorrectionFactor;
       return "play";
     }
     // Otherwise, continue rendering
     if (this.gameState.cityId != undefined) {
       this.readyButton.visible = true;
       this.cityIcon.iconBorder.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
+      this.cityIcon.icon.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
     }
-    this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready\nLevel " + (this.gameState.globals.level + 1));
-
+    //this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready\nLevel " + (this.gameState.globals.level + 1));
+    this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : "Level " + (this.gameState.globals.level + 1) + " with " + total + " players");
 
     if (this.gameState.globals != undefined && this.gameState.globals.status != null) {
       this.blackoutRectangle.clear();
@@ -123,9 +131,11 @@ module.exports.prototype.render = function () {
     }
   }
   if (this.gameState.currentCity != undefined) {
+    // Reactive readiness
     this.readyButton.setStyle({
       font: "normal 100pt Arial",
-      fill: this.gameState.currentCity.ready ? "green" : "#525252"
+      fill: this.gameState.currentCity.ready ? "#c7c7c7" : "#525252"
     });
+    this.cityIcon.icon.visible = this.gameState.currentCity.ready;
   }
 };

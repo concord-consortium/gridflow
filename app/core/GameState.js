@@ -3,17 +3,20 @@
  * An object to hold and synchronize data behind the game.
  */
 var Dynamics = require("core/Dynamics"),
-  LevelTimer = require("core/LevelTimer");
+  LevelTimer = require("core/LevelTimer"),
+  Utils = require("core/Utils"),
+  addCityListener;
 module.exports = function () {
   "use strict";
   this.sync = {};
   this.host = false;
   // Leveling (host only);
-  this.level = 2;
+  this.level = 0;
   this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3")];
   // Joining
   this.uid = (Math.random() + Date.now()).toString();
   this.islandName = "";
+  this.timeCorrectionFactor = 0;
   // The numerical id (0-3) of the city
   this.cityId = undefined;
   // The current city object
@@ -31,6 +34,7 @@ module.exports = function () {
   this.dynamics = new Dynamics(this);
   this.levelTimer = new LevelTimer(this);
   // Constants
+  this.MAX_TIME_CORRECTION = 10000;
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
   this.ANIMATION_RATE = 0.05;
@@ -50,6 +54,11 @@ module.exports = function () {
     0x58a581,
     0x585ea5,
     0x8d8d8d
+  ];
+  this.ENERGY_SOURCE_ICONS = [
+    new PIXI.Texture.fromImage("images/SourceWind.png"),
+    new PIXI.Texture.fromImage("images/SourceSolar.png"),
+    new PIXI.Texture.fromImage("images/SourceFossil.png")
   ];
   this.CITY_COLORS = [
     0xffa701,
@@ -127,17 +136,20 @@ module.exports.prototype.countCities = function (cityNumber) {
 // Sync the current city to the other cities
 module.exports.prototype.syncCity = function () {
   "use strict";
+  if (this.host === true) {
+    this.globals.now = Date.now();
+  }
   this.firebase.child(this.cityId).set(this.sync[this.cityId]);
   this.hasUpdated = true;
 }
 // Listen for changes in the other cities
-var addCityListener = function (city) {
+addCityListener = function (city) {
   "use strict";
   this.firebase.child(city).on("value", function (data) {
     var val = data.val();
     if (city === this.cityId) {
       if (val !== null && val.uid !== this.uid) {
-        console.warn("Concurrent error.");
+        // console.warn("Concurrent error.");
         this.disconnect(true);
         this.reconnect();
         return;
@@ -146,13 +158,15 @@ var addCityListener = function (city) {
       this.sync[city] = val;
       if (this.sync[0] == undefined) {
         // Host disconnected!
-        console.warn("Host disconnected!");
+        // console.warn("Host disconnected!");
         this.disconnect();
         this.reconnect();
         return;
       }
       if (city === 0) {
         this.globals = this.sync[0].globals;
+        // Correct all times
+        this.timeCorrectionFactor = Utils.clamp(this.globals.now - Date.now(), -this.MAX_TIME_CORRECTION, this.MAX_TIME_CORRECTION);
       }
       this.hasUpdated = true;
     }
@@ -166,7 +180,7 @@ module.exports.prototype.resetCity = function (status) {
   // Set up the city
   this.currentCity = this.sync[this.cityId] = {
     // Whether the "ready" button is pressed
-    "ready": true,
+    "ready": false,
     // Outgoing energy
     "outgoing": [],
     // Whether or not the city has blacked out
@@ -183,6 +197,7 @@ module.exports.prototype.resetCity = function (status) {
       // startTime is also used as an indicator of playing/not playing
       "playing": false,
       "startTime": null,
+      "now": 0,
       // A cityId if a city blacked out, or true on win.
       "status": status === undefined ? null : status,
       // Energy sources per city
