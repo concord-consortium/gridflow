@@ -19,23 +19,26 @@ module.exports = function (width, height, maxEnergy) {
   this.demandHeight = 15;
   this.drawable = new PIXI.Graphics();
   this.update();
-}
+};
 /**
  * Updates the graphics object
  */
 module.exports.prototype.update = function () {
   "use strict";
   var i;
+  // Draw the background bar
   this.drawable.clear();
   this.drawable.beginFill(0x000000);
   this.drawable.drawRect(0, 0, this.supply * this.width / this.maxEnergy, this.height);
   this.drawable.endFill();
+  // Draw the minor unit bars
   for (i = 0; i < this.supplyRounded; i++) {
     this.drawable.beginFill(0x666666);
     this.drawable.drawRect(i * this.width / this.maxEnergy, 0, this.width / this.maxEnergy - this.gap, this.height);
     this.drawable.endFill();
   }
+  // Draw the demand line
   this.drawable.beginFill(0xFF0000);
   this.drawable.drawRect(this.demand * this.width / this.maxEnergy, -this.demandHeight, this.demandWidth, this.height + 2 * this.demandHeight);
   this.drawable.endFill();
-}
+};

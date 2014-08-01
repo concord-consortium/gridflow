@@ -2,7 +2,8 @@
  * Join.js
  * A scene where the user is waiting for others to join.
  */
-var CityIcon = require("components/CityIcon");
+var CityIcon = require("components/CityIcon"),
+  Utils = require("core/Utils");
 
 module.exports = function (gameState, stage) {
   "use strict";
@@ -51,6 +52,7 @@ module.exports = function (gameState, stage) {
     this.readyContainer.touchstart = function () {
       if (that.gameState.currentCity != undefined && that.gameState.globals != undefined) {
         that.gameState.currentCity.ready = true;
+        Utils.vibrate(that.gameState.TAP_VIBRATION);
         that.gameState.syncCity();
       }
   };
@@ -61,6 +63,10 @@ module.exports = function (gameState, stage) {
         that.gameState.currentCity.ready = false;
         that.gameState.syncCity();
       }
+  };
+  this.readyContainer.click =
+    this.readyContainer.tap = function () {
+      Utils.vibrate(that.gameState.TAP_VIBRATION);
   };
 };
 // Renders the scene
@@ -99,7 +105,7 @@ module.exports.prototype.render = function () {
       this.cityIcon.iconBorder.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
       this.cityIcon.icon.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
     }
-    //this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready\nLevel " + (this.gameState.globals.level + 1));
+    // this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready\nLevel " + (this.gameState.globals.level + 1));
     this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : "Level " + (this.gameState.globals.level + 1) + " with " + total + " player" + (total === 1 ? "" : "s"));
 
     if (this.gameState.globals != undefined && this.gameState.globals.status != null) {

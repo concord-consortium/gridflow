@@ -6,11 +6,13 @@ var Dynamics = require("core/Dynamics"),
   LevelTimer = require("core/LevelTimer"),
   Utils = require("core/Utils"),
   addCityListener;
+
 module.exports = function () {
   "use strict";
   this.sync = {};
   this.host = false;
-  // Leveling (host only);
+  // Leveling (host only)
+  // Set this to your desired start level for easy development
   this.level = 0;
   this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3"), require("levels/Level4")];
   // Joining
@@ -33,17 +35,18 @@ module.exports = function () {
   this.dynamics = new Dynamics(this);
   this.levelTimer = new LevelTimer(this);
   // Constants
-  this.MAX_TIME_DRIFT = 3000;
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
   this.ANIMATION_RATE = 0.05;
   // Time is all in milliseconds
+  this.MAX_TIME_DRIFT = 3000;
   this.UPDATE_INTERVAL = 2 * 1000;
-  this.ENERGY_COLOR = 0xfff36a;
-  this.MISSING_ENERGY_COLOR = 0xff0000;
-  this.EXTRA_ENERGY_COLOR = 0x00c617;
-  this.ENERGY_COLOR = 0xfff36a;
+  // Determines maximum width in layout
   this.MAX_ENERGY = 12;
+  // Vibration times
+  this.TAP_VIBRATION = 10;
+  this.BLACKOUT_VIBRATION = 50;
+  this.BLACKOUT_BLINK = 400;
   this.ENERGY_SOURCE_NAMES = [
     "Wind",
     "Solar",
@@ -73,7 +76,7 @@ module.exports.prototype.connect = function (islandName) {
   this.firebase = new Firebase(this.FIREBASE_URL + this.islandName);
   this.reconnect();
 };
-//Connects to or creates an existing session.
+// Connects to or creates an existing session.
 module.exports.prototype.reconnect = function () {
   "use strict";
   this.firebase.once("value", function (data) {
@@ -107,8 +110,8 @@ module.exports.prototype.reconnect = function () {
     }
     this.resetCity();
   }, this);
-}
-//Removes listeners and the data from the server.
+};
+// Removes listeners and the data from the server.
 module.exports.prototype.disconnect = function (soft) {
   "use strict";
   var i;
@@ -116,11 +119,11 @@ module.exports.prototype.disconnect = function (soft) {
   if (!soft && this.cityId != undefined) {
     this.firebase.child(this.cityId).set(null);
   }
-  //Stop listening to other cities
+  // Stop listening to other cities
   for (i = 0; i < this.MAX_CITIES; i++) {
     this.firebase.child(i).off();
   }
-}
+};
 // Returns total number of connected cities
 module.exports.prototype.countCities = function (cityNumber) {
   "use strict";
@@ -131,7 +134,7 @@ module.exports.prototype.countCities = function (cityNumber) {
     }
   }
   return sum;
-}
+};
 // Sync the current city to the other cities
 module.exports.prototype.syncCity = function () {
   "use strict";
@@ -140,7 +143,52 @@ module.exports.prototype.syncCity = function () {
   }
   this.firebase.child(this.cityId).set(this.sync[this.cityId]);
   this.hasUpdated = true;
-}
+};
+// Resets the city for the beginning of a game
+module.exports.prototype.resetCity = function (status) {
+  "use strict";
+  // Reset some variables
+  this.startTime = undefined;
+  // Set up the city
+  this.currentCity = this.sync[this.cityId] = {
+    // Whether the "ready" button is pressed
+    // Set this to true for easy development
+    "ready": false,
+    // Outgoing energy
+    "outgoing": [],
+    // Whether or not the city has blacked out
+    "blackout": false,
+    "uid": this.uid
+  };
+  // Host has extra metadata
+  if (this.host === true) {
+    // Setup level
+    if (status === true && this.level < this.levels.length - 1) {
+      this.level++;
+    }
+    this.globals = this.currentCity.globals = {
+      // startTime is also used as an indicator of playing/not playing
+      "playing": false,
+      "startTime": null,
+      "now": 0,
+      // A cityId if a city blacked out, or true on win.
+      "status": status === undefined ? null : status,
+      // Energy sources per city
+      "supply": null,
+      // Demand per city
+      "demand": null,
+      // Level number
+      "level": this.level,
+      // Level object
+      "currentLevel": this.levels[this.level]
+    };
+    this.dynamics.init();
+  } else {
+    this.currentCity.globals = null;
+  }
+  this.hasUpdated = true;
+  this.syncCity();
+};
 // Listen for changes in the other cities
 addCityListener = function (city) {
   "use strict";
@@ -168,48 +216,4 @@ addCityListener = function (city) {
       this.hasUpdated = true;
     }
   }, this);
-};
-// Resets the city for the beginning of a game
-module.exports.prototype.resetCity = function (status) {
-  "use strict";
-  // Reset some variables
-  this.startTime = undefined;
-  // Set up the city
-  this.currentCity = this.sync[this.cityId] = {
-    // Whether the "ready" button is pressed
-    "ready": false,
-    // Outgoing energy
-    "outgoing": [],
-    // Whether or not the city has blacked out
-    "blackout": false,
-    "uid": this.uid
-  };
-  // Host has extra metadata
-  if (this.host === true) {
-    //Setup level
-    if (status === true && this.level < this.levels.length - 1) {
-      this.level++;
-    }
-    this.globals = this.currentCity.globals = {
-      // startTime is also used as an indicator of playing/not playing
-      "playing": false,
-      "startTime": null,
-      "now": 0,
-      // A cityId if a city blacked out, or true on win.
-      "status": status === undefined ? null : status,
-      // Energy sources per city
-      "supply": null,
-      // Demand per city
-      "demand": null,
-      // Level number
-      "level": this.level,
-      // Level object
-      "currentLevel": this.levels[this.level]
-    };
-    this.dynamics.init();
-  } else {
-    this.currentCity.globals = null;
-  }
-  this.hasUpdated = true;
-  this.syncCity();
 };

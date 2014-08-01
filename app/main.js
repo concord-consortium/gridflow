@@ -9,7 +9,7 @@ var gameState = new GameState(),
     play: new Play(gameState, stage),
     join: new Join(gameState, stage)
   },
-  animate;
+  animate, raf;
 stage.interactive = true;
 
 // Set everything up
@@ -19,11 +19,19 @@ gameState.currentStage.container.visible = true;
 
 document.body.appendChild(renderer.view);
 
-//Reload if hash has changed
+// Reload if hash has changed
 window.addEventListener("hashchange", function () {
   window.location.reload();
 }, false);
 
+// Compatability
+raf = function (func) {
+  if (window.requestAnimationFrame != undefined) {
+    window.requestAnimationFrame(func);
+  } else {
+    setTimeout(func, 16);
+  }
+}
 animate = function () {
   "use strict";
   var switchTo = gameState.currentStage.render();
@@ -40,7 +48,7 @@ animate = function () {
     gameState.hasUpdated = false;
   }
   renderer.render(stage);
-  requestAnimationFrame(animate);
+  raf(animate);
 };
-requestAnimationFrame(animate);
+raf(animate);
 // gs = gameState;

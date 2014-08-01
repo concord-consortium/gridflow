@@ -2,7 +2,6 @@
  * Flow.js
  * Computes energy flow, contracts, and the like.
  */
-
 module.exports = function (gameState) {
   "use strict";
   this.gameState = gameState;
@@ -97,7 +96,7 @@ module.exports.prototype.getEnergyFrom = function (city) {
   }
   for (i = 0; i < cityData.outgoing.length; i++) {
     check = cityData.outgoing[i];
-    //NOTE: Timecheck is removed to solve issues on desynced clocks.
+    // NOTE: Timecheck is removed to solve issues on desynced clocks.
     if (check.dest === this.gameState.cityId) { // && (this.gameState.globals.currentLevel.contractLength <=0 || check.until > elapsed)) {
       return check;
     }
@@ -118,7 +117,7 @@ module.exports.prototype.getEnergyTo = function (city) {
   return null;
 };
 
-//Get source energy
+// Get source energy
 module.exports.prototype.getSources = function () {
   "use strict";
   return this.gameState.globals.supply[this.gameState.cityId];
@@ -134,7 +133,7 @@ module.exports.prototype.getTotalSource = function () {
   return total;
 };
 
-//Get demand energy
+// Get demand energy
 module.exports.prototype.getTotalDemand = function () {
   "use strict";
   return this.gameState.globals.demand[this.gameState.cityId];

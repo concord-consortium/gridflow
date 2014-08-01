@@ -4,9 +4,13 @@
  */
 var Utils = require("core/Utils"),
   ants = 10,
+  // The length ratio of ant to not-ant.
   antRatio = 0.4,
+  // The width of one unit of power.
   width = 20,
+  // The margin between the ant and the side of the bar.
   antSubtractedWidth = 10;
+
 module.exports = function (xSource, ySource, xDest, yDest) {
   "use strict";
   this.xSource = xSource || 0;

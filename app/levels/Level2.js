@@ -6,7 +6,7 @@
 module.exports = {
   // The number of milliseconds after which a game is won.
   winAfter: 25000,
-  //The amount of time(milliseconds) before a blackout
+  // The amount of time(milliseconds) before a blackout
   blackoutDelay: 8000,
   // The starting time of day, 0<=t<1. 0 is 12:00 am, 0.5 is 12:00 pm.
   startTime: 0.5,
