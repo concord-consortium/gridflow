@@ -1,5 +1,5 @@
 /*
- * LevelTimer.js
+ * Utils.js
  * An object with multiple useful functions.
  */
 module.exports.clamp = function (n, min, max) {

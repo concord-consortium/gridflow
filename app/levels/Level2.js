@@ -1,3 +1,8 @@
+/*
+ * Level 2
+ * A level with fixed energy sources.
+ * Contracts now run out, and winning involves renewing contracts.
+ */
 module.exports = {
   // The number of milliseconds after which a game is won.
   winAfter: 25000,

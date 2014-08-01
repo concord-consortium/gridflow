@@ -1,10 +1,10 @@
 /*
- * Level 3
- * An approximation of gameplay before the level system.
+ * Level 4
+ * An infinitely long freestyle level for testing.
  */
 module.exports = {
   // The number of milliseconds after which a game is won.
-  winAfter: 112500,
+  winAfter: -1,
   //The amount of time(milliseconds) before a blackout
   blackoutDelay: 15000,
   // The starting time of day, 0<=t<1. 0 is 12:00 am, 0.5 is 12:00 pm.
@@ -15,12 +15,12 @@ module.exports = {
   energyPerContract: 1,
   // The maximum energy in a contract made with a city.
   // Set to a non-positive number for an arbitrary number or contracts.
-  maxEnergyPerContract: 1,
+  maxEnergyPerContract: 3,
   // The amount of time in milliseconds that a contract remains open
   // Use a non-positive number for infinite time.
   contractLength: 15000,
   // The amount of extra energy floating around
-  extraEnergy: 1,
+  extraEnergy: 10,
   players: [
     {
       supply: [

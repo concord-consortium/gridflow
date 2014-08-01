@@ -1,3 +1,8 @@
+/*
+ * Level 1
+ * A level with fixed, unlabeled energy sources.
+ * Winning involves issuing a contract.
+ */
 module.exports = {
   // The number of milliseconds after which a game is won.
   winAfter: 10000,

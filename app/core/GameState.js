@@ -12,11 +12,10 @@ module.exports = function () {
   this.host = false;
   // Leveling (host only);
   this.level = 0;
-  this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3")];
+  this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3"), require("levels/Level4")];
   // Joining
   this.uid = (Math.random() + Date.now()).toString();
   this.islandName = "";
-  this.timeCorrectionFactor = 0;
   // The numerical id (0-3) of the city
   this.cityId = undefined;
   // The current city object
@@ -34,7 +33,7 @@ module.exports = function () {
   this.dynamics = new Dynamics(this);
   this.levelTimer = new LevelTimer(this);
   // Constants
-  this.MAX_TIME_CORRECTION = 10000;
+  this.MAX_TIME_DRIFT = 3000;
   this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
   this.MAX_CITIES = 4;
   this.ANIMATION_RATE = 0.05;
@@ -137,7 +136,7 @@ module.exports.prototype.countCities = function (cityNumber) {
 module.exports.prototype.syncCity = function () {
   "use strict";
   if (this.host === true) {
-    this.globals.now = Date.now();
+    this.globals.elapsed = this.levelTimer.getElapsed();
   }
   this.firebase.child(this.cityId).set(this.sync[this.cityId]);
   this.hasUpdated = true;
@@ -165,8 +164,6 @@ addCityListener = function (city) {
       }
       if (city === 0) {
         this.globals = this.sync[0].globals;
-        // Correct all times
-        this.timeCorrectionFactor = Utils.clamp(this.globals.now - Date.now(), -this.MAX_TIME_CORRECTION, this.MAX_TIME_CORRECTION);
       }
       this.hasUpdated = true;
     }

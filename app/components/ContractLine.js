@@ -33,7 +33,7 @@ module.exports.prototype.update = function () {
     i, progressFrom, progressTo;
   this.drawable.clear();
   if (this.active) {
-    this.drawable.lineStyle(width, 0xFFFFFF, 0.3);
+    this.drawable.lineStyle(width * this.amount, 0xFFFFFF, 0.3);
   } else {
     this.drawable.lineStyle(width, 0xFFFFFF, 0.2);
   }

@@ -84,7 +84,7 @@ module.exports = function (gameState, stage) {
 };
 // Renders the scene
 module.exports.prototype.render = function () {
-  var elapsed, i, j, supplyIndex, city, cityIcon, contractLine, contract, dayProgression, player, icon;
+  var elapsed, i, j, supplyIndex, estimatedTime, city, cityIcon, contractLine, contract, dayProgression, player, icon;
   this.gameState.levelTimer.cache();
   elapsed = this.gameState.levelTimer.getElapsed();
   // Listen to the host and stop when the host does.
@@ -94,7 +94,7 @@ module.exports.prototype.render = function () {
     return "join";
   }
   // Handle win
-  if (elapsed >= this.gameState.globals.currentLevel.winAfter) {
+  if (this.gameState.globals.currentLevel.winAfter >= 0 && elapsed >= this.gameState.globals.currentLevel.winAfter) {
     if (this.gameState.host === true) {
       this.gameState.resetCity(true);
       reset.call(this);
@@ -129,9 +129,10 @@ module.exports.prototype.render = function () {
   }
   // Rendering begins!
   if (this.gameState.hasUpdated) {
-    // Hmm... just in case.
-    if (this.gameState.startTime == undefined) {
-      this.gameState.startTime = this.gameState.globals.startTime + this.gameState.timeCorrectionFactor;
+    // Hmm... just in case.\
+    estimatedTime = Date.now() - this.gameState.globals.elapsed;
+    if (this.gameState.startTime == undefined || Math.abs(this.gameState.startTime - estimatedTime) > this.gameState.MAX_TIME_DRIFT) {
+      this.gameState.startTime = estimatedTime;
     }
     // City color!
     this.cityIcon.icon.tint = this.gameState.CITY_COLORS[this.gameState.cityId];

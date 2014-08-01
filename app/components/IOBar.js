@@ -27,11 +27,11 @@ module.exports.prototype.update = function () {
   "use strict";
   var i;
   this.drawable.clear();
-  this.drawable.beginFill(0xAAAAAA);
+  this.drawable.beginFill(0x000000);
   this.drawable.drawRect(0, 0, this.supply * this.width / this.maxEnergy, this.height);
   this.drawable.endFill();
   for (i = 0; i < this.supplyRounded; i++) {
-    this.drawable.beginFill(0x000000);
+    this.drawable.beginFill(0x666666);
     this.drawable.drawRect(i * this.width / this.maxEnergy, 0, this.width / this.maxEnergy - this.gap, this.height);
     this.drawable.endFill();
   }

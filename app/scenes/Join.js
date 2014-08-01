@@ -90,7 +90,7 @@ module.exports.prototype.render = function () {
       this.gameState.globals.playing === true &&
       this.gameState.currentCity != undefined &&
       this.gameState.currentCity.ready === true) {
-      this.gameState.startTime = this.gameState.globals.startTime + this.gameState.timeCorrectionFactor;
+      this.gameState.startTime = Date.now() - this.gameState.globals.elapsed;
       return "play";
     }
     // Otherwise, continue rendering
@@ -100,7 +100,7 @@ module.exports.prototype.render = function () {
       this.cityIcon.icon.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
     }
     //this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready\nLevel " + (this.gameState.globals.level + 1));
-    this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : "Level " + (this.gameState.globals.level + 1) + " with " + total + " players");
+    this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : "Level " + (this.gameState.globals.level + 1) + " with " + total + " player" + (total === 1 ? "" : "s"));
 
     if (this.gameState.globals != undefined && this.gameState.globals.status != null) {
       this.blackoutRectangle.clear();
