@@ -246,13 +246,16 @@ addCityButtonListener = function (cityButton, i) {
   var that = this;
   cityButton.click =
     cityButton.tap = function () {
-      var city = i >= that.gameState.cityId ? i + 1 : i;
-      that.flow.sendEnergy(city);
-      Utils.vibrate(that.gameState.TAP_VIBRATION);
+      if (this.gameState.globals.playing === true) {
+        that.flow.sendEnergy(i >= that.gameState.cityId ? i + 1 : i);
+        Utils.vibrate(that.gameState.TAP_VIBRATION);
+      }
   };
   cityButton.mousedown =
     cityButton.touchstart = function () {
-      Utils.vibrate(that.gameState.TAP_VIBRATION);
+      if (this.gameState.globals.playing === true) {
+        Utils.vibrate(that.gameState.TAP_VIBRATION);
+      }
   };
 };
 reset = function () {

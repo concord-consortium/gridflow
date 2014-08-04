@@ -66,7 +66,7 @@ module.exports.prototype.computeFlow = function () {
 module.exports.prototype.sendEnergy = function (dest) {
   "use strict";
   var contract, elapsed = this.gameState.levelTimer.getElapsed();
-  if (this.gameState.globals.currentLevel.energyPerContract <= this.supplySum) {
+  if (this.gameState.globals.playing === true && this.gameState.globals.currentLevel.energyPerContract <= this.supplySum) {
     if (this.send[dest] == null) {
       contract = {
         dest: dest,
