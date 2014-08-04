@@ -170,7 +170,7 @@ module.exports.prototype.resetCity = function (status) {
       // startTime is also used as an indicator of playing/not playing
       "playing": false,
       "startTime": null,
-      "now": 0,
+      "elapsed": 0,
       // A cityId if a city blacked out, or true on win.
       "status": status === undefined ? null : status,
       // Energy sources per city
