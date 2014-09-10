@@ -30,3 +30,6 @@ public/
 
 # Bower stuff.
 bower_components/
+
+# Sublime workspace (very much a transient, per-user thing)
+*.sublime-workspace
