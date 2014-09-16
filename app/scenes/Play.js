@@ -22,11 +22,11 @@ module.exports = function (gameState, stage) {
   this.container.visible = false;
   stage.addChild(this.container);
 
-  this.visualClock = new VisualClock(854, 1000);
+  this.visualClock = new VisualClock(768, 800);
   this.container.addChild(this.visualClock.drawable);
 
   this.cityIcon = new CityIcon();
-  this.cityIcon.drawable.position.set(171, 650);
+  this.cityIcon.drawable.position.set(154, 520);
   this.cityIcon.icon.visible = true;
   this.cityIcon.iconLights.visible = true;
   this.container.addChild(this.cityIcon.drawable);
@@ -37,13 +37,13 @@ module.exports = function (gameState, stage) {
   this.statusText.position.set(400, 10);
   this.container.addChild(this.statusText);
 
-  this.totalInputBar = new IOBar(830, 70, this.gameState.MAX_ENERGY);
+  this.totalInputBar = new IOBar(746, 56, this.gameState.MAX_ENERGY);
   this.container.addChild(this.totalInputBar.drawable);
-  this.totalInputBar.drawable.position.set(12, 1020);
+  this.totalInputBar.drawable.position.set(11, 900);
 
   this.inputTypes = new PIXI.DisplayObjectContainer();
   this.container.addChild(this.inputTypes);
-  this.inputTypes.position.set(10, 1120);
+  this.inputTypes.position.set(9, 896);
   //  this.loseButton = new PIXI.Text("Insta-lose", {
   //    font: "normal 70pt Arial",
   //    fill: "#f00"
@@ -68,17 +68,17 @@ module.exports = function (gameState, stage) {
     cityIcon = new CityIcon();
     this.cityIcons[i] = cityIcon;
     cityIcon.icon.visible = true;
-    cityIcon.icon.width = cityIcon.icon.height = 265;
-    cityIcon.drawable.position.set(15 + 280 * i, 50);
+    cityIcon.icon.width = cityIcon.icon.height = 238;
+    cityIcon.drawable.position.set(13 + 252 * i, 40);
     this.container.addChild(cityIcon.drawable);
     addCityButtonListener.call(this, cityIcon.drawable, i);
 
     // Create and add contract lines
-    line = new ContractLine(307 + 150 * i, 620, 185 + 280 * i, 270);
+    line = new ContractLine(276 + 135 * i, 496, 185 + 280 * i, 270);
     this.contractLines[2 * i] = line;
     this.container.addChild(line.drawable);
 
-    line = new ContractLine(125 + 280 * i, 270, 247 + 150 * i, 620);
+    line = new ContractLine(125 + 280 * i, 270, 222 + 135 * i, 496);
     this.contractLines[2 * i + 1] = line;
     this.container.addChild(line.drawable);
   }
@@ -159,7 +159,7 @@ module.exports.prototype.render = function () {
           icon.texture = this.gameState.ENERGY_SOURCE_ICONS[supplyIndex];
         }
         icon.tint = this.gameState.ENERGY_SOURCE_COLORS[supplyIndex];
-        icon.position.x = 150 * i;
+        icon.position.x = 135 * i;
       }
     }
   }

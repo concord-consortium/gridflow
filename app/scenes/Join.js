@@ -17,14 +17,14 @@ module.exports = function (gameState, stage) {
   this.container.addChild(this.blackoutRectangle);
 
   this.cityIcon = new CityIcon();
-  this.cityIcon.drawable.position.set(171, 650);
+  this.cityIcon.drawable.position.set(154, 520);
   this.cityIcon.iconBorder.visible = true;
 
   this.statusText = new PIXI.Text("", {
     font: "normal 40pt Arial",
     fill: "#525252"
   });
-  this.statusText.position.set(10, 10);
+  this.statusText.position.set(9, 9);
   this.container.addChild(this.statusText);
 
   this.placeholderText = new PIXI.Text("", {
@@ -32,14 +32,14 @@ module.exports = function (gameState, stage) {
     fill: "#525252"
   });
   this.container.addChild(this.placeholderText);
-  this.placeholderText.position.set(10, 120);
+  this.placeholderText.position.set(9, 96);
 
   this.readyButton = new PIXI.Text("READY", {
     font: "normal 100pt Arial",
     fill: "#525252"
   });
   this.readyButton.visible = false;
-  this.readyButton.position.set(200, 1000);
+  this.readyButton.position.set(180, 850);
 
   this.readyContainer = new PIXI.DisplayObjectContainer();
   this.readyContainer.interactive = true;
@@ -117,7 +117,7 @@ module.exports.prototype.render = function () {
         // Blackout
         this.blackoutRectangle.beginFill(0x000000, 0.5);
       }
-      this.blackoutRectangle.drawRect(0, 0, 854, 1280);
+      this.blackoutRectangle.drawRect(0, 0, 768, 1024);
       this.blackoutRectangle.endFill();
       if (this.gameState.globals.status === true) {
         this.placeholderText.setText("YOU WIN!!!!!");

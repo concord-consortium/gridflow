@@ -3,7 +3,7 @@ var GameState = require("core/GameState"),
   Play = require("scenes/Play");
 
 var gameState = new GameState(),
-  renderer = new PIXI.autoDetectRenderer(854, 1280),
+  renderer = new PIXI.autoDetectRenderer(768, 1024),
   stage = new PIXI.Stage(0xFFFFFF),
   stages = {
     play: new Play(gameState, stage),
