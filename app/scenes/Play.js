@@ -69,16 +69,16 @@ module.exports = function (gameState, stage) {
     this.cityIcons[i] = cityIcon;
     cityIcon.icon.visible = true;
     cityIcon.icon.width = cityIcon.icon.height = 238;
-    cityIcon.drawable.position.set(13 + 252 * i, 40);
+    cityIcon.drawable.position.set(13 + 252 * i, 145);
     this.container.addChild(cityIcon.drawable);
     addCityButtonListener.call(this, cityIcon.drawable, i);
 
     // Create and add contract lines
-    line = new ContractLine(276 + 135 * i, 496, 185 + 280 * i, 270);
+    line = new ContractLine(276 + 135 * i, 601, 185 + 280 * i, 375);
     this.contractLines[2 * i] = line;
     this.container.addChild(line.drawable);
 
-    line = new ContractLine(125 + 280 * i, 270, 222 + 135 * i, 496);
+    line = new ContractLine(125 + 280 * i, 375, 222 + 135 * i, 601);
     this.contractLines[2 * i + 1] = line;
     this.container.addChild(line.drawable);
   }
