@@ -5,3 +5,6 @@ exports.config =
       joinTo: 'app.js'
     stylesheets:
       joinTo: 'app.css'
+  plugins:
+    autoReload:
+      enabled: false
