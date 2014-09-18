@@ -16,8 +16,11 @@
    CITY 2 BLACKED OUT!  RETRY >>
 **/
 
-var MEDIUM = 30;
-var LARGE = 50;
+var MEDIUM = 24;
+var LARGE = 72;
+
+var PRIMARY = '#FFFFFF';
+var SECONDARY = '#FFD747';
 
 // TODO: also define constants for y offsets
 
@@ -32,23 +35,23 @@ var CHILD_CONFIGS = {
 
   connecting: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "Connecting...", size: MEDIUM, x: 300, y: 5 },
+    centerMessage: { text: "Connecting...", style: 'normal 400', size: MEDIUM, x: 200, y: 300 },
     rightMessage:  { visible: false },
     button:        { visible: false }
   },
 
   waiting: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "READY?", size: LARGE, x: 300, y: 5 },
+    centerMessage: { text: "READY?", size: LARGE, style: 'italic 700', x: 240, y: 0 },
     rightMessage:  { visible: false },
-    button:        { text: "START", size: MEDIUM, x: 500, y: 10 }
+    button:        { text: "START", size: MEDIUM, style: 'normal 300', x: 600, y: 30 }
   },
 
   // check the basecamp posting for expected visuals here...
   ready: {
-    leftMessage:   { size: MEDIUM, x: 20, y: 10 },
-    centerMessage: { text: "READY!", size: LARGE, x: 300, y: 5 },
-    rightMessage:  { size: MEDIUM, x: 500, y: 10 },
+    leftMessage:   { size: MEDIUM, style: 'normal 300', x: 50, y: 30 },
+    centerMessage: { text: "READY!", size: LARGE, style: 'italic 700', x: 240, y: 5 },
+    rightMessage:  { size: MEDIUM, style: 'normal 300', x: 600, y: 30 },
     button:        { visible: false }
   },
 
@@ -91,7 +94,8 @@ var CHILD_CONFIG_DEFAULTS = {
   text:    "",
   size:    1,
   x:       0,
-  y:       0
+  y:       0,
+  style:   'normal 400'
 };
 
 _.forEach(CHILD_CONFIGS, function(config) {
@@ -128,9 +132,9 @@ module.exports = function (x, y, width, height) {
   this.drawable.addChild(this.background);
 
   this._childDrawables = {
-    leftMessage: new PIXI.Text(""),
-    centerMessage: new PIXI.Text(""),
-    rightMessage: new PIXI.Text(""),
+    leftMessage: new PIXI.Text("", { fill: SECONDARY }),
+    centerMessage: new PIXI.Text("", { fill: PRIMARY }),
+    rightMessage: new PIXI.Text("", { fill: SECONDARY }),
     button: new PIXI.DisplayObjectContainer()
   };
 
@@ -139,7 +143,7 @@ module.exports = function (x, y, width, height) {
     that.drawable.addChild(childDrawable);
   });
 
-  this._buttonTextDrawable = new PIXI.Text("");
+  this._buttonTextDrawable = new PIXI.Text("", { fill: SECONDARY });
   this._childDrawables.button.addChild(this._buttonTextDrawable);
 
   this._childDrawables.button.interactive = true;
@@ -161,7 +165,7 @@ module.exports = function (x, y, width, height) {
 //     or other property) of the message fields and button.
 //
 // ex:
-//   headerBar.setScreenConfiguration('ready', {
+//   headerBar.show('ready', {
 //     leftMessage: { text: "Level 2" },
 //     rightMessage: { text: "4 Players" }
 //   });
@@ -204,9 +208,10 @@ module.exports.prototype.update = function() {
 
     textDrawable.setText(config.text);
     textDrawable.setStyle({
-      font: config.size + 'pt Arial',   // TODO update font
-      fill: '#FFFFFF'
+      font: config.style + ' ' + config.size + 'pt "Titillium Web"',   // TODO update font
+      fill: textDrawable.style.fill
     });
+    console.log(config.text + ": " +  textDrawable.style.font);
 
   }.bind(this));
 };

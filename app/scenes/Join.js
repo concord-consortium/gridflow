@@ -90,8 +90,8 @@ module.exports.prototype.render = function () {
   // show ready, set, or go?
   if (gameState.currentCity.ready) {
     this.headerBar.show(globals.countdownStep || 'ready', {
-      leftMessage: { text: "Level " + (this.gameState.globals.level + 1) },
-      rightMessage: { text:  total + " player" + (total === 1 ? "" : "s") }
+      leftMessage: { text: "LEVEL " + (this.gameState.globals.level + 1) },
+      rightMessage: { text:  total + " PLAYER" + (total === 1 ? "" : "S") }
     });
     return;
   }
