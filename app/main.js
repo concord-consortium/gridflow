@@ -12,6 +12,18 @@ var gameState = new GameState(),
   animate, raf;
 stage.interactive = true;
 
+// Make sure not to render anything until the web fonts load. Otherwise, PIXI will set the bounding
+// boxes of the text elements incorrectly, by using the fallback font. (It doesn't reset the
+// bounding boxes when it re-renders with the loaded font.)
+WebFont.load({
+  google: {
+    families: ['Titillium+Web:600,600italic,700italic:latin']
+  },
+  active: start,
+  inactive: start
+});
+
+
 // Set everything up
 gameState.connect(window.location.hash.replace(/[^a-z]+/g, "") || "default");
 gameState.currentStage = stages.join;
@@ -23,6 +35,7 @@ document.body.appendChild(renderer.view);
 window.addEventListener("hashchange", function () {
   window.location.reload();
 }, false);
+
 
 // Compatability
 raf = function (func) {
@@ -50,5 +63,7 @@ animate = function () {
   renderer.render(stage);
   raf(animate);
 };
-raf(animate);
-// gs = gameState;
+
+function start() {
+  raf(animate);
+}

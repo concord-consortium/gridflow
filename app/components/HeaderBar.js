@@ -16,10 +16,20 @@
    CITY 2 BLACKED OUT!  RETRY >>
 **/
 
-var MEDIUM = 30;
-var LARGE = 50;
+// text colors
+var PRIMARY = '#FFFFFF';
+var SECONDARY = '#FFD747';
 
-// TODO: also define constants for y offsets
+var SMALL = 22;
+var MEDIUM = 45;
+var LARGE = 72;
+
+var Y_LARGE = 124;
+var Y_MEDIUM = 96;
+var Y_SMALL = 75;
+
+var RSG_LEFT  = { size: SMALL, style: 'normal 600', x: 48,  y: Y_SMALL };
+var RSG_RIGHT = { size: SMALL, style: 'normal 600', x: 586, y: Y_SMALL };
 
 var CHILD_CONFIGS = {
 
@@ -31,53 +41,52 @@ var CHILD_CONFIGS = {
   },
 
   connecting: {
-    leftMessage:   { visible: false },
-    centerMessage: { text: "Connecting...", size: MEDIUM, x: 300, y: 5 },
+    leftMessage: { text: "CONNECTING . . .", size: SMALL, style: 'italic 600', x: 288, y: Y_SMALL },
+    centerMessage: { visible: false },
     rightMessage:  { visible: false },
     button:        { visible: false }
   },
 
   waiting: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "READY?", size: LARGE, x: 300, y: 5 },
+    centerMessage: { text: "READY?", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
     rightMessage:  { visible: false },
-    button:        { text: "START", size: MEDIUM, x: 500, y: 10 }
+    button:        { text: "START", size: SMALL, style: 'normal 600', x: 85, y: Y_SMALL }
   },
 
-  // check the basecamp posting for expected visuals here...
   ready: {
-    leftMessage:   { size: MEDIUM, x: 20, y: 10 },
-    centerMessage: { text: "READY!", size: LARGE, x: 300, y: 5 },
-    rightMessage:  { size: MEDIUM, x: 500, y: 10 },
+    leftMessage:   RSG_LEFT,
+    centerMessage: { text: "READY!", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
+    rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
 
   set: {
-    leftMessage:   { size: MEDIUM, x: 20, y: 10},
-    centerMessage: { text: "SET!", size: LARGE, x: 300, y: 5 },
-    rightMessage:  { size: MEDIUM, x: 500, y: 10 },
+    leftMessage:   RSG_LEFT,
+    centerMessage: { text: "SET!", size: LARGE, style: 'italic 700', x: 297, y: Y_LARGE },
+    rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
 
   go: {
-    leftMessage:   { size: MEDIUM, x: 20, y: 10},
-    centerMessage: { text: "GO!", size: LARGE, x: 300, y: 5 },
-    rightMessage:  { size: MEDIUM, x: 500, y: 10 },
+    leftMessage:   RSG_LEFT,
+    centerMessage: { text: "GO!", size: LARGE, style: 'italic 700', x: 319, y: Y_LARGE },
+    rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
 
   won: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "YOU WIN!", size: LARGE, x: 50, y: 5 },
+    centerMessage: { text: "YOU WIN!", size: LARGE, style: 'italic 700', x: 100, y: Y_LARGE },
     rightMessage:  { visible: false },
-    button:        { text: "NEXT LEVEL", size: MEDIUM, x: 500, y: 10 }
+    button:        { text: "NEXT LEVEL", size: SMALL, style: 'normal 600', x: 16, y: Y_SMALL }
   },
 
   lost: {
     leftMessage:   { visible: false },
-    centerMessage: { size: LARGE, x: 400, y: 5 },
+    centerMessage: { size: MEDIUM, style: 'italic 700', x: 45, y: Y_MEDIUM },
     rightMessage:  { visible: false },
-    button:        { text: "RETRY", size: MEDIUM, x: 500, y: 10 }
+    button:        { text: "RETRY", size: SMALL, style: 'normal 600', x: 85, y: Y_SMALL }
   }
 };
 
@@ -91,7 +100,8 @@ var CHILD_CONFIG_DEFAULTS = {
   text:    "",
   size:    1,
   x:       0,
-  y:       0
+  y:       0,
+  style:   'normal 600'
 };
 
 _.forEach(CHILD_CONFIGS, function(config) {
@@ -108,6 +118,22 @@ function click() {
   }
   /* jshint +W040 */
 }
+
+function makeButtonGraphic() {
+  var WIDTH = 21;
+  var HEIGHT = 38;
+
+  var button = new PIXI.Graphics();
+  // TODO: this is SECONDARY, but can't use CSS style string
+  button.beginFill(0xFFD747);
+  button.moveTo(0, 0);
+  button.lineTo(WIDTH, HEIGHT / 2);
+  button.lineTo(0, HEIGHT);
+  button.lineTo(0, 0);
+  button.endFill();
+
+  return button;
+};
 
 module.exports = function (x, y, width, height) {
   var that = this;
@@ -128,26 +154,38 @@ module.exports = function (x, y, width, height) {
   this.drawable.addChild(this.background);
 
   this._childDrawables = {
-    leftMessage: new PIXI.Text(""),
-    centerMessage: new PIXI.Text(""),
-    rightMessage: new PIXI.Text(""),
+    leftMessage: new PIXI.Text("", { fill: SECONDARY }),
+    centerMessage: new PIXI.Text("", { fill: PRIMARY }),
+    rightMessage: new PIXI.Text("", { fill: SECONDARY }),
     button: new PIXI.DisplayObjectContainer()
   };
 
-  // _.forEach handily iterates over values rather than keys
+  // TODO: make the math work
+  this._childDrawables.button.position.x = 540;
+  this._childDrawables.button.hitArea = new PIXI.Rectangle(0, 0, 228, 105);
+
+  // Make the y-coordinate of PIXI.Text objects the bottom (.anchor.y = 1) because PIXI seems
+  // to get confused about the proper bounding box, making it impossible (using the default top
+  // anchor) to put text elements high enough on the screen even when their y coordinate is set to 0
   _.forEach(this._childDrawables, function(childDrawable) {
+    if (childDrawable.anchor) {
+      childDrawable.anchor.y = 1;
+    }
     that.drawable.addChild(childDrawable);
   });
 
-  this._buttonTextDrawable = new PIXI.Text("");
+  this._buttonTextDrawable = new PIXI.Text("", { fill: SECONDARY });
+  this._buttonTextDrawable.anchor.y = 1;
   this._childDrawables.button.addChild(this._buttonTextDrawable);
+
+  this._buttonGraphic = makeButtonGraphic();
+  this._buttonGraphic.position.x = 179;
+  this._buttonGraphic.position.y = 34;
+  this._childDrawables.button.addChild(this._buttonGraphic);
 
   this._childDrawables.button.interactive = true;
   this._childDrawables.button.click = this._childDrawables.button.tap = click.bind(this);
   this._childDrawables.button.buttonMode = true;
-
-  // this._buttonGraphic = ...;
-  // this._childDrawables.button.addChild(this._buttonGraphic);
 
   this.show('initial');
 };
@@ -161,7 +199,7 @@ module.exports = function (x, y, width, height) {
 //     or other property) of the message fields and button.
 //
 // ex:
-//   headerBar.setScreenConfiguration('ready', {
+//   headerBar.show('ready', {
 //     leftMessage: { text: "Level 2" },
 //     rightMessage: { text: "4 Players" }
 //   });
@@ -199,13 +237,15 @@ module.exports.prototype.update = function() {
     var config = this[key];
 
     drawable.visible = config.visible;
-    drawable.x = config.x;
-    drawable.y = config.y;
-
-    textDrawable.setText(config.text);
+    textDrawable.x = config.x;
+    textDrawable.y = config.y;
+    // hacks to deal with Canvas/PIXI/Titillium kerning and space issues:
+    // (1) add 1 space to end of strings deal with the too-small bounding box for italic fonts
+    // (2) add 1 space before exclamation points, to deal with terrible default kerning
+    textDrawable.setText(config.text.replace(/!$/, " !") + " ");
     textDrawable.setStyle({
-      font: config.size + 'pt Arial',   // TODO update font
-      fill: '#FFFFFF'
+      font: config.style + ' ' + config.size + 'pt "Titillium Web"',   // TODO update font
+      fill: textDrawable.style.fill
     });
 
   }.bind(this));

@@ -9,6 +9,8 @@ var HeaderBar = require('components/HeaderBar');
 
 var COUNTDOWN_INTERVAL = 1000;  // ms
 
+
+
 function setCountdownStep(step) {
   // jshint -W040
   this.gameState.globals.countdownStep = step;
@@ -90,8 +92,8 @@ module.exports.prototype.render = function () {
   // show ready, set, or go?
   if (gameState.currentCity.ready) {
     this.headerBar.show(globals.countdownStep || 'ready', {
-      leftMessage: { text: "Level " + (this.gameState.globals.level + 1) },
-      rightMessage: { text:  total + " player" + (total === 1 ? "" : "s") }
+      leftMessage: { text: "LEVEL " + (this.gameState.globals.level + 1) },
+      rightMessage: { text:  total + " PLAYER" + (total === 1 ? "" : "S") }
     });
     return;
   }
@@ -103,7 +105,7 @@ module.exports.prototype.render = function () {
       this.headerBar.show('won');
     } else {
       this.headerBar.show('lost', {
-        centerMessage: { text: "City " + (status+1) + " blacked out!" }
+        centerMessage: { text: "CITY " + (status+1) + " BLACKED OUT!" }
       });
     }
     return;
