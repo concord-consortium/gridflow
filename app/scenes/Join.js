@@ -10,8 +10,10 @@ var HeaderBar = require('components/HeaderBar');
 var COUNTDOWN_INTERVAL = 1000;  // ms
 
 function setCountdownStep(step) {
+  // jshint -W040
   this.gameState.globals.countdownStep = step;
   this.gameState.syncCity();
+  // jshint +W040
 }
 
 module.exports = function (gameState, stage) {
@@ -86,7 +88,7 @@ module.exports.prototype.render = function () {
   }
 
   // show ready, set, or go?
-  if ( gameState.currentCity.ready ) {
+  if (gameState.currentCity.ready) {
     this.headerBar.show(globals.countdownStep || 'ready', {
       leftMessage: { text: "Level " + (this.gameState.globals.level + 1) },
       rightMessage: { text:  total + " player" + (total === 1 ? "" : "s") }
@@ -95,7 +97,7 @@ module.exports.prototype.render = function () {
   }
 
   // show won/lost message?
-  if (globals && globals.status != null ) {
+  if (globals && globals.status != null) {
     // can't test truthiness; status === true means won, status === 1 means city 2 blacked out...
     if (globals.status === true) {
       this.headerBar.show('won');
