@@ -4,7 +4,12 @@
   "main": "public/app.js",
   "dependencies": {
     "pixi": "~1.6.0",
-    "firebase": "~1.0.17"
+    "firebase": "~1.0.17",
+    "lodash": "~2.4.1"
   },
-  "overrides": {}
+  "overrides": {
+    "lodash": {
+      "main": "dist/lodash.js"
+    }
+  }
 }

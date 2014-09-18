@@ -1,7 +1,7 @@
 {
     "browser": true,
     "eqnull": true,
-    "predef": ["PIXI", "module", "require"],
+    "predef": ["_", "PIXI", "module", "require"],
     "globalstrict": true,
     "unused": true
 }
