@@ -169,6 +169,7 @@ module.exports.prototype.resetCity = function (status) {
     this.globals = this.currentCity.globals = {
       // startTime is also used as an indicator of playing/not playing
       "playing": false,
+      "countdownStep": false, // also can be 'ready', 'set', or 'go'
       "startTime": null,
       "elapsed": 0,
       // A cityId if a city blacked out, or true on win.

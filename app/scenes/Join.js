@@ -2,146 +2,111 @@
  * Join.js
  * A scene where the user is waiting for others to join.
  */
-var CityIcon = require("components/CityIcon"),
-  Utils = require("core/Utils");
+'use strict';
+
+var Utils     = require('core/Utils');
+var HeaderBar = require('components/HeaderBar');
+
+var COUNTDOWN_INTERVAL = 1000;  // ms
+
+function setCountdownStep(step) {
+  this.gameState.globals.countdownStep = step;
+  this.gameState.syncCity();
+}
 
 module.exports = function (gameState, stage) {
-  "use strict";
   this.gameState = gameState;
 
   this.container = new PIXI.DisplayObjectContainer();
   this.container.visible = false;
   stage.addChild(this.container);
 
-  this.blackoutRectangle = new PIXI.Graphics();
-  this.container.addChild(this.blackoutRectangle);
+  this.headerBar = new HeaderBar(0, 0, 768, 105);
+  this.container.addChild(this.headerBar.drawable);
 
-  this.cityIcon = new CityIcon();
-  this.cityIcon.drawable.position.set(154, 520);
-  this.cityIcon.iconBorder.visible = true;
-
-  this.statusText = new PIXI.Text("", {
-    font: "normal 40pt Arial",
-    fill: "#525252"
-  });
-  this.statusText.position.set(9, 9);
-  this.container.addChild(this.statusText);
-
-  this.placeholderText = new PIXI.Text("", {
-    font: "normal 50pt Arial",
-    fill: "#525252"
-  });
-  this.container.addChild(this.placeholderText);
-  this.placeholderText.position.set(9, 96);
-
-  this.readyButton = new PIXI.Text("READY", {
-    font: "normal 100pt Arial",
-    fill: "#525252"
-  });
-  this.readyButton.visible = false;
-  this.readyButton.position.set(180, 850);
-
-  this.readyContainer = new PIXI.DisplayObjectContainer();
-  this.readyContainer.interactive = true;
-  this.readyContainer.addChild(this.readyButton);
-  this.readyContainer.addChild(this.cityIcon.drawable);
-  this.container.addChild(this.readyContainer);
-
-  var that = this;
-  this.readyContainer.mousedown =
-    this.readyContainer.touchstart = function () {
-      if (that.gameState.currentCity != undefined && that.gameState.globals != undefined) {
-        that.gameState.currentCity.ready = true;
-        Utils.vibrate(that.gameState.TAP_VIBRATION);
-        that.gameState.syncCity();
-      }
-  };
-  this.readyContainer.mouseup =
-    this.readyContainer.touchend =
-    this.readyContainer.mouseout = function () {
-      if (that.gameState.currentCity != undefined && that.gameState.globals != undefined) {
-        that.gameState.currentCity.ready = false;
-        that.gameState.syncCity();
-      }
-  };
-  this.readyContainer.click =
-    this.readyContainer.tap = function () {
-      Utils.vibrate(that.gameState.TAP_VIBRATION);
-  };
+  this.headerBar.onclick = function() {
+    // TODO: and what to do if there is no current city?
+    if (this.gameState.currentCity && this.gameState.globals) {
+      this.gameState.currentCity.ready = true;
+      Utils.vibrate(this.gameState.TAP_VIBRATION);
+      this.gameState.syncCity();
+    }
+  }.bind(this);
 };
+
 // Renders the scene
 module.exports.prototype.render = function () {
-  "use strict";
-  if (this.gameState.hasUpdated) {
-    var ready = 0,
-      total = this.gameState.countCities(),
-      i;
+
+  if ( ! this.gameState.hasUpdated) {
+    return;
+  }
+
+  var gameState = this.gameState;
+  var globals   = this.gameState.globals;
+  var ready = 0;
+  var total = this.gameState.countCities();
+  var i;
+
+  // Host decides when we're ready to start playing
+  if (this.gameState.host) {
+    // TODO make this a method?
     for (i = 0; i < this.gameState.MAX_CITIES; i++) {
-      if (this.gameState.sync[i] != undefined && this.gameState.sync[i].ready === true) {
+      if (gameState.sync[i] && gameState.sync[i].ready) {
         ready++;
       }
     }
-    if (this.gameState.host === true) {
-      if (ready >= total && total >= 2) {
-        if (this.gameState.globals.playing === false) {
+
+    if (ready >= total && total >= 2) {
+      // start the countdown and then play
+      if ( ! (this.gameState.globals.countdownStep || this.gameState.globals.playing) ) {
+        setCountdownStep.call(this, 'ready');
+        window.setTimeout(setCountdownStep.bind(this, 'set'),     COUNTDOWN_INTERVAL);
+        window.setTimeout(setCountdownStep.bind(this, 'go'),  2 * COUNTDOWN_INTERVAL);
+        window.setTimeout(function() {
+          this.gameState.countdownStep = false;
           this.gameState.globals.playing = true;
           this.gameState.globals.status = null;
           this.gameState.globals.startTime = Date.now();
           this.gameState.syncCity();
-        }
+        }.bind(this), 3 * COUNTDOWN_INTERVAL);
       }
     }
-    // Start the game if everyone is ready
-    if (this.gameState.globals != undefined &&
-      this.gameState.globals.playing === true &&
-      this.gameState.currentCity != undefined &&
-      this.gameState.currentCity.ready === true) {
-      this.gameState.startTime = Date.now() - this.gameState.globals.elapsed;
-      return "play";
-    }
-    // Otherwise, continue rendering
-    if (this.gameState.cityId != undefined) {
-      this.readyButton.visible = true;
-      this.cityIcon.iconBorder.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
-      this.cityIcon.icon.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
-    }
-    // this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : ready + "/" + total + " Player(s) ready\nLevel " + (this.gameState.globals.level + 1));
-    this.statusText.setText(this.gameState.cityId == undefined || this.gameState.globals == undefined ? "Connecting..." : "Level " + (this.gameState.globals.level + 1) + " with " + total + " player" + (total === 1 ? "" : "s"));
+  }
 
-    if (this.gameState.globals != undefined && this.gameState.globals.status != null) {
-      this.blackoutRectangle.clear();
-      if (this.gameState.globals.status === true) {
-        // Default, white background
-        this.blackoutRectangle.beginFill(0xFFFFFF, 0.9);
-      } else {
-        // Blackout
-        this.blackoutRectangle.beginFill(0x000000, 0.5);
-      }
-      this.blackoutRectangle.drawRect(0, 0, 768, 1024);
-      this.blackoutRectangle.endFill();
-      if (this.gameState.globals.status === true) {
-        this.placeholderText.setText("YOU WIN!!!!!");
-        this.placeholderText.setStyle({
-          font: "normal 50pt Arial",
-          fill: "#0fb45c"
-        });
-        this.readyButton.setText("NEXT");
-      } else {
-        this.placeholderText.setText("City " + (this.gameState.globals.status + 1) + " BLACKED OUT.");
-        this.placeholderText.setStyle({
-          font: "normal 50pt Arial",
-          fill: "#" + this.gameState.CITY_COLORS[this.gameState.globals.status].toString(16)
-        });
-        this.readyButton.setText("RETRY");
-      }
-    }
+  // Stop and go to 'play' scene if the host has set playing=true
+  if (globals && globals.playing && gameState.currentCity && gameState.currentCity.ready) {
+    gameState.startTime = Date.now() - globals.elapsed;
+    return 'play';
   }
-  if (this.gameState.currentCity != undefined) {
-    // Reactive readiness
-    this.readyButton.setStyle({
-      font: "normal 100pt Arial",
-      fill: this.gameState.currentCity.ready ? "#c7c7c7" : "#525252"
+
+  // show connecting message?
+  if (this.gameState.cityId == null || this.gameState.globals == null) {
+    this.headerBar.show('connecting');
+    return;
+  }
+
+  // show ready, set, or go?
+  if ( gameState.currentCity.ready ) {
+    this.headerBar.show(globals.countdownStep || 'ready', {
+      leftMessage: { text: "Level " + (this.gameState.globals.level + 1) },
+      rightMessage: { text:  total + " player" + (total === 1 ? "" : "s") }
     });
-    this.cityIcon.icon.visible = this.gameState.currentCity.ready;
+    return;
   }
+
+  // show won/lost message?
+  if (globals && globals.status != null ) {
+    // can't test truthiness; status === true means won, status === 1 means city 2 blacked out...
+    if (globals.status === true) {
+      this.headerBar.show('won');
+    } else {
+      this.headerBar.show('lost', {
+        centerMessage: { text: "City " + (status+1) + " blacked out!" }
+      });
+    }
+    return;
+  }
+
+  // wait
+  this.headerBar.show('waiting');
 };
