@@ -9,6 +9,8 @@ var HeaderBar = require('components/HeaderBar');
 
 var COUNTDOWN_INTERVAL = 1000;  // ms
 
+
+
 function setCountdownStep(step) {
   // jshint -W040
   this.gameState.globals.countdownStep = step;
@@ -17,10 +19,14 @@ function setCountdownStep(step) {
 }
 
 module.exports = function (gameState, stage) {
+  var background = new PIXI.Sprite.fromImage("images/background-day.png");
+  background.position.x = background.position.y = 0;
+
   this.gameState = gameState;
 
   this.container = new PIXI.DisplayObjectContainer();
   this.container.visible = false;
+  this.container.addChild(background);
   stage.addChild(this.container);
 
   this.headerBar = new HeaderBar(0, 0, 768, 105);
@@ -103,7 +109,7 @@ module.exports.prototype.render = function () {
       this.headerBar.show('won');
     } else {
       this.headerBar.show('lost', {
-        centerMessage: { text: "City " + (status+1) + " blacked out!" }
+        centerMessage: { text: "CITY " + (status+1) + " BLACKED OUT!" }
       });
     }
     return;

@@ -16,7 +16,8 @@
    CITY 2 BLACKED OUT!  RETRY >>
 **/
 
-var MEDIUM = 24;
+var SMALL = 24;
+var MEDIUM = 36;
 var LARGE = 72;
 
 var PRIMARY = '#FFFFFF';
@@ -35,52 +36,52 @@ var CHILD_CONFIGS = {
 
   connecting: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "Connecting...", style: 'normal 400', size: MEDIUM, x: 200, y: 300 },
+    centerMessage: { text: "Connecting...", style: 'normal 400', size: SMALL, x: 200, y: 50 },
     rightMessage:  { visible: false },
     button:        { visible: false }
   },
 
   waiting: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "READY?", size: LARGE, style: 'italic 700', x: 240, y: 0 },
+    centerMessage: { text: "READY? ", size: LARGE, style: 'italic 700', x: 240, y: 120 },
     rightMessage:  { visible: false },
-    button:        { text: "START", size: MEDIUM, style: 'normal 300', x: 600, y: 30 }
+    button:        { text: "START", size: SMALL, style: 'normal 300', x: 600, y: 75 }
   },
 
   // check the basecamp posting for expected visuals here...
   ready: {
-    leftMessage:   { size: MEDIUM, style: 'normal 300', x: 50, y: 30 },
-    centerMessage: { text: "READY!", size: LARGE, style: 'italic 700', x: 240, y: 5 },
-    rightMessage:  { size: MEDIUM, style: 'normal 300', x: 600, y: 30 },
+    leftMessage:   { size: SMALL, style: 'normal 300', x: 50, y: 75 },
+    centerMessage: { text: "READY! ", size: LARGE, style: 'italic 700', x: 240, y: 120 },
+    rightMessage:  { size: SMALL, style: 'normal 300', x: 600, y: 75 },
     button:        { visible: false }
   },
 
   set: {
-    leftMessage:   { size: MEDIUM, x: 20, y: 10},
-    centerMessage: { text: "SET!", size: LARGE, x: 300, y: 5 },
-    rightMessage:  { size: MEDIUM, x: 500, y: 10 },
+    leftMessage:   { size: SMALL, style: 'normal 300', x: 50, y: 75 },
+    centerMessage: { text: "SET! ", size: LARGE, style: 'italic 700', x: 260, y: 120 },
+    rightMessage:  { size: SMALL, style: 'normal 300', x: 600, y: 75 },
     button:        { visible: false }
   },
 
   go: {
-    leftMessage:   { size: MEDIUM, x: 20, y: 10},
-    centerMessage: { text: "GO!", size: LARGE, x: 300, y: 5 },
-    rightMessage:  { size: MEDIUM, x: 500, y: 10 },
+    leftMessage:   { size: SMALL, style: 'normal 300', x: 50, y: 75 },
+    centerMessage: { text: "GO! ", size: LARGE, style: 'italic 700', x: 270, y: 120 },
+    rightMessage:  { size: SMALL, style: 'normal 300', x: 600, y: 75 },
     button:        { visible: false }
   },
 
   won: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "YOU WIN!", size: LARGE, x: 50, y: 5 },
+    centerMessage: { text: "YOU WIN!", size: MEDIUM, x: 300, y: 85 },
     rightMessage:  { visible: false },
-    button:        { text: "NEXT LEVEL", size: MEDIUM, x: 500, y: 10 }
+    button:        { text: "NEXT LEVEL", size: SMALL, style: 'normal 300', x: 600, y: 75 }
   },
 
   lost: {
     leftMessage:   { visible: false },
-    centerMessage: { size: LARGE, x: 400, y: 5 },
+    centerMessage: { size: MEDIUM, x: 80, y: 85 },
     rightMessage:  { visible: false },
-    button:        { text: "RETRY", size: MEDIUM, x: 500, y: 10 }
+    button:        { text: "RETRY", size: SMALL, style: 'normal 300', x: 600, y: 75 }
   }
 };
 
@@ -140,10 +141,14 @@ module.exports = function (x, y, width, height) {
 
   // _.forEach handily iterates over values rather than keys
   _.forEach(this._childDrawables, function(childDrawable) {
+    if (childDrawable.anchor) {
+      childDrawable.anchor.y = 1;
+    }
     that.drawable.addChild(childDrawable);
   });
 
   this._buttonTextDrawable = new PIXI.Text("", { fill: SECONDARY });
+  this._buttonTextDrawable.anchor.y = 1;
   this._childDrawables.button.addChild(this._buttonTextDrawable);
 
   this._childDrawables.button.interactive = true;
@@ -205,13 +210,14 @@ module.exports.prototype.update = function() {
     drawable.visible = config.visible;
     drawable.x = config.x;
     drawable.y = config.y;
+    //drawable.height = 1.1 * config.size;
 
     textDrawable.setText(config.text);
     textDrawable.setStyle({
       font: config.style + ' ' + config.size + 'pt "Titillium Web"',   // TODO update font
       fill: textDrawable.style.fill
     });
-    console.log(config.text + ": " +  textDrawable.style.font);
+    console.log(config.text + ": " +  textDrawable.height);
 
   }.bind(this));
 };
