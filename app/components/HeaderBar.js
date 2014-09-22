@@ -21,11 +21,13 @@ var PRIMARY = '#FFFFFF';
 var SECONDARY = '#FFD747';
 
 var SMALL = 22;
-var MEDIUM = 36;
+var MEDIUM = 45;
 var LARGE = 72;
 
 var Y_LARGE = 124;
+var Y_MEDIUM = 96;
 var Y_SMALL = 75;
+
 var RSG_LEFT  = { size: SMALL, style: 'normal 600', x: 48,  y: Y_SMALL };
 var RSG_RIGHT = { size: SMALL, style: 'normal 600', x: 586, y: Y_SMALL };
 
@@ -76,14 +78,14 @@ var CHILD_CONFIGS = {
 
   won: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "YOU WIN!", size: MEDIUM, x: 300, y: 85 },
+    centerMessage: { text: "YOU WIN!", size: LARGE, style: 'italic 700', x: 100, y: Y_LARGE },
     rightMessage:  { visible: false },
     button:        { text: "NEXT LEVEL", size: SMALL, style: 'normal 600', x: 16, y: Y_SMALL }
   },
 
   lost: {
     leftMessage:   { visible: false },
-    centerMessage: { size: MEDIUM, x: 80, y: 85 },
+    centerMessage: { size: MEDIUM, style: 'italic 700', x: 45, y: Y_MEDIUM },
     rightMessage:  { visible: false },
     button:        { text: "RETRY", size: SMALL, style: 'normal 600', x: 85, y: Y_SMALL }
   }
