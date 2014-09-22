@@ -16,14 +16,17 @@
    CITY 2 BLACKED OUT!  RETRY >>
 **/
 
-var SMALL = 24;
-var MEDIUM = 36;
-var LARGE = 72;
-
+// text colors
 var PRIMARY = '#FFFFFF';
 var SECONDARY = '#FFD747';
 
-// TODO: also define constants for y offsets
+var SMALL = 22;
+var MEDIUM = 36;
+var LARGE = 72;
+
+var Y_LARGE = 124;
+var RSG_LEFT  = { size: SMALL, style: 'normal 600', x: 48,  y: 75 };
+var RSG_RIGHT = { size: SMALL, style: 'normal 600', x: 586, y: 75 };
 
 var CHILD_CONFIGS = {
 
@@ -43,30 +46,29 @@ var CHILD_CONFIGS = {
 
   waiting: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "READY? ", size: LARGE, style: 'italic 700', x: 240, y: 120 },
+    centerMessage: { text: "READY? ", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
     rightMessage:  { visible: false },
     button:        { text: "START", size: SMALL, style: 'normal 300', x: 600, y: 75 }
   },
 
-  // check the basecamp posting for expected visuals here...
   ready: {
-    leftMessage:   { size: SMALL, style: 'normal 300', x: 50, y: 75 },
-    centerMessage: { text: "READY! ", size: LARGE, style: 'italic 700', x: 240, y: 120 },
-    rightMessage:  { size: SMALL, style: 'normal 300', x: 600, y: 75 },
+    leftMessage:   RSG_LEFT,
+    centerMessage: { text: "READY! ", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
+    rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
 
   set: {
-    leftMessage:   { size: SMALL, style: 'normal 300', x: 50, y: 75 },
-    centerMessage: { text: "SET! ", size: LARGE, style: 'italic 700', x: 260, y: 120 },
-    rightMessage:  { size: SMALL, style: 'normal 300', x: 600, y: 75 },
+    leftMessage:   RSG_LEFT,
+    centerMessage: { text: "SET! ", size: LARGE, style: 'italic 700', x: 297, y: Y_LARGE },
+    rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
 
   go: {
-    leftMessage:   { size: SMALL, style: 'normal 300', x: 50, y: 75 },
-    centerMessage: { text: "GO! ", size: LARGE, style: 'italic 700', x: 270, y: 120 },
-    rightMessage:  { size: SMALL, style: 'normal 300', x: 600, y: 75 },
+    leftMessage:   RSG_LEFT,
+    centerMessage: { text: "GO! ", size: LARGE, style: 'italic 700', x: 319, y: Y_LARGE },
+    rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
 
