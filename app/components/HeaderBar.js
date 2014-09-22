@@ -141,7 +141,9 @@ module.exports = function (x, y, width, height) {
     button: new PIXI.DisplayObjectContainer()
   };
 
-  // _.forEach handily iterates over values rather than keys
+  // Make the y-coordinate of PIXI.Text objects the bottom (.anchor.y = 1) because PIXI seems
+  // to get confused about the proper bounding box, making it impossible (using the default top
+  // anchor) to put text elements high enough on the screen even when their y coordinate is set to 0
   _.forEach(this._childDrawables, function(childDrawable) {
     if (childDrawable.anchor) {
       childDrawable.anchor.y = 1;
