@@ -48,7 +48,7 @@ var CHILD_CONFIGS = {
     leftMessage:   { visible: false },
     centerMessage: { text: "READY? ", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
     rightMessage:  { visible: false },
-    button:        { text: "START", size: SMALL, style: 'normal 300', x: 600, y: 75 }
+    button:        { text: "START", size: SMALL, style: 'normal 300', x: 60, y: 75 }
   },
 
   ready: {
@@ -76,14 +76,14 @@ var CHILD_CONFIGS = {
     leftMessage:   { visible: false },
     centerMessage: { text: "YOU WIN!", size: MEDIUM, x: 300, y: 85 },
     rightMessage:  { visible: false },
-    button:        { text: "NEXT LEVEL", size: SMALL, style: 'normal 300', x: 600, y: 75 }
+    button:        { text: "NEXT LEVEL", size: SMALL, style: 'normal 300', x: 60, y: 75 }
   },
 
   lost: {
     leftMessage:   { visible: false },
     centerMessage: { size: MEDIUM, x: 80, y: 85 },
     rightMessage:  { visible: false },
-    button:        { text: "RETRY", size: SMALL, style: 'normal 300', x: 600, y: 75 }
+    button:        { text: "RETRY", size: SMALL, style: 'normal 300', x: 60, y: 75 }
   }
 };
 
@@ -140,6 +140,10 @@ module.exports = function (x, y, width, height) {
     rightMessage: new PIXI.Text("", { fill: SECONDARY }),
     button: new PIXI.DisplayObjectContainer()
   };
+
+  // TODO: make the math work
+  this._childDrawables.button.position.x = 540;
+  this._childDrawables.button.hitArea = new PIXI.Rectangle(0, 0, 228, 105);
 
   // Make the y-coordinate of PIXI.Text objects the bottom (.anchor.y = 1) because PIXI seems
   // to get confused about the proper bounding box, making it impossible (using the default top
@@ -212,10 +216,8 @@ module.exports.prototype.update = function() {
     var config = this[key];
 
     drawable.visible = config.visible;
-    drawable.x = config.x;
-    drawable.y = config.y;
-    //drawable.height = 1.1 * config.size;
-
+    textDrawable.x = config.x;
+    textDrawable.y = config.y;
     textDrawable.setText(config.text);
     textDrawable.setStyle({
       font: config.style + ' ' + config.size + 'pt "Titillium Web"',   // TODO update font
