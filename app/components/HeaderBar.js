@@ -25,8 +25,9 @@ var MEDIUM = 36;
 var LARGE = 72;
 
 var Y_LARGE = 124;
-var RSG_LEFT  = { size: SMALL, style: 'normal 600', x: 48,  y: 75 };
-var RSG_RIGHT = { size: SMALL, style: 'normal 600', x: 586, y: 75 };
+var Y_SMALL = 75;
+var RSG_LEFT  = { size: SMALL, style: 'normal 600', x: 48,  y: Y_SMALL };
+var RSG_RIGHT = { size: SMALL, style: 'normal 600', x: 586, y: Y_SMALL };
 
 var CHILD_CONFIGS = {
 
@@ -39,7 +40,8 @@ var CHILD_CONFIGS = {
 
   connecting: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "Connecting...", style: 'normal 400', size: SMALL, x: 200, y: 50 },
+    // TODO
+    centerMessage: { text: "Connecting...", style: 'normal 400', size: SMALL, x: 200, y: Y_SMALL },
     rightMessage:  { visible: false },
     button:        { visible: false }
   },
@@ -48,7 +50,7 @@ var CHILD_CONFIGS = {
     leftMessage:   { visible: false },
     centerMessage: { text: "READY? ", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
     rightMessage:  { visible: false },
-    button:        { text: "START", size: SMALL, style: 'normal 300', x: 60, y: 75 }
+    button:        { text: "START", size: SMALL, style: 'normal 600', x: 85, y: Y_SMALL }
   },
 
   ready: {
@@ -76,14 +78,14 @@ var CHILD_CONFIGS = {
     leftMessage:   { visible: false },
     centerMessage: { text: "YOU WIN!", size: MEDIUM, x: 300, y: 85 },
     rightMessage:  { visible: false },
-    button:        { text: "NEXT LEVEL", size: SMALL, style: 'normal 300', x: 60, y: 75 }
+    button:        { text: "NEXT LEVEL", size: SMALL, style: 'normal 600', x: 16, y: Y_SMALL }
   },
 
   lost: {
     leftMessage:   { visible: false },
     centerMessage: { size: MEDIUM, x: 80, y: 85 },
     rightMessage:  { visible: false },
-    button:        { text: "RETRY", size: SMALL, style: 'normal 300', x: 60, y: 75 }
+    button:        { text: "RETRY", size: SMALL, style: 'normal 600', x: 85, y: Y_SMALL }
   }
 };
 
