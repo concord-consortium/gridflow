@@ -116,6 +116,22 @@ function click() {
   /* jshint +W040 */
 }
 
+function makeButtonGraphic() {
+  var WIDTH = 21;
+  var HEIGHT = 38;
+
+  var button = new PIXI.Graphics();
+  // TODO: this is SECONDARY, but can't use CSS style string
+  button.beginFill(0xFFD747);
+  button.moveTo(0, 0);
+  button.lineTo(WIDTH, HEIGHT / 2);
+  button.lineTo(0, HEIGHT);
+  button.lineTo(0, 0);
+  button.endFill();
+
+  return button;
+};
+
 module.exports = function (x, y, width, height) {
   var that = this;
 
@@ -159,12 +175,14 @@ module.exports = function (x, y, width, height) {
   this._buttonTextDrawable.anchor.y = 1;
   this._childDrawables.button.addChild(this._buttonTextDrawable);
 
+  this._buttonGraphic = makeButtonGraphic();
+  this._buttonGraphic.position.x = 179;
+  this._buttonGraphic.position.y = 34;
+  this._childDrawables.button.addChild(this._buttonGraphic);
+
   this._childDrawables.button.interactive = true;
   this._childDrawables.button.click = this._childDrawables.button.tap = click.bind(this);
   this._childDrawables.button.buttonMode = true;
-
-  // this._buttonGraphic = ...;
-  // this._childDrawables.button.addChild(this._buttonGraphic);
 
   this.show('initial');
 };
