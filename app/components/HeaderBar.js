@@ -48,28 +48,28 @@ var CHILD_CONFIGS = {
 
   waiting: {
     leftMessage:   { visible: false },
-    centerMessage: { text: "READY? ", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
+    centerMessage: { text: "READY?", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
     rightMessage:  { visible: false },
     button:        { text: "START", size: SMALL, style: 'normal 600', x: 85, y: Y_SMALL }
   },
 
   ready: {
     leftMessage:   RSG_LEFT,
-    centerMessage: { text: "READY! ", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
+    centerMessage: { text: "READY!", size: LARGE, style: 'italic 700', x: 240, y: Y_LARGE },
     rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
 
   set: {
     leftMessage:   RSG_LEFT,
-    centerMessage: { text: "SET! ", size: LARGE, style: 'italic 700', x: 297, y: Y_LARGE },
+    centerMessage: { text: "SET!", size: LARGE, style: 'italic 700', x: 297, y: Y_LARGE },
     rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
 
   go: {
     leftMessage:   RSG_LEFT,
-    centerMessage: { text: "GO! ", size: LARGE, style: 'italic 700', x: 319, y: Y_LARGE },
+    centerMessage: { text: "GO!", size: LARGE, style: 'italic 700', x: 319, y: Y_LARGE },
     rightMessage:  RSG_RIGHT,
     button:        { visible: false }
   },
@@ -238,12 +238,14 @@ module.exports.prototype.update = function() {
     drawable.visible = config.visible;
     textDrawable.x = config.x;
     textDrawable.y = config.y;
-    textDrawable.setText(config.text);
+    // hacks to deal with Canvas/PIXI/Titillium kerning and space issues:
+    // (1) add 1 space to end of strings deal with the too-small bounding box for italic fonts
+    // (2) add 1 space before exclamation points, to deal with terrible default kerning
+    textDrawable.setText(config.text.replace(/!$/, " !") + " ");
     textDrawable.setStyle({
       font: config.style + ' ' + config.size + 'pt "Titillium Web"',   // TODO update font
       fill: textDrawable.style.fill
     });
-    console.log(config.text + ": " +  textDrawable.height);
 
   }.bind(this));
 };
