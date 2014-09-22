@@ -41,9 +41,8 @@ var CHILD_CONFIGS = {
   },
 
   connecting: {
-    leftMessage:   { visible: false },
-    // TODO
-    centerMessage: { text: "Connecting...", style: 'normal 400', size: SMALL, x: 200, y: Y_SMALL },
+    leftMessage: { text: "CONNECTING . . .", size: SMALL, style: 'italic 600', x: 288, y: Y_SMALL },
+    centerMessage: { visible: false },
     rightMessage:  { visible: false },
     button:        { visible: false }
   },
