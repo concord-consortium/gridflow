@@ -101,7 +101,7 @@ var CHILD_CONFIG_DEFAULTS = {
   size:    1,
   x:       0,
   y:       0,
-  style:   'normal 400'
+  style:   'normal 600'
 };
 
 _.forEach(CHILD_CONFIGS, function(config) {
