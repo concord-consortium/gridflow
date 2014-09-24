@@ -1,41 +1,70 @@
 /**
  * CityIcon.js
- * Displays a clickable city, optionally with lights!
- * (Mostly typed with Dvorak!)
+ * Displays a city
  */
-var width = 512,
-  height = 336;
-module.exports = function () {
-  "use strict";
-  this.color = 0;
-  this.drawable = new PIXI.DisplayObjectContainer();
-  this.drawable.interactive = true;
+'use strict';
+
+var baseTexture = new PIXI.BaseTexture.fromImage('images/citiesSpritesheet.png');
+var spritesheetData = require('data/spritesheets/citiesSpritesheet');
+var textureCache = [];
+
+// private methods (reference 'this')
+/*jshint -W040*/
+function getTextureIndex() {
+  var baseIndex = {
+    large: 0,
+    small: 16
+  }[this.largeOrSmall];
+
+  if (baseIndex == null) {
+    throw new Error("Unknown largeOrSmall value '" + this.largeOrSmall + "'");
+  }
+
+  return baseIndex + this.cityIndex + getBlackoutStage.call(this) * 4;
+}
+
+function getBlackoutStage() {
+  if (this.largeOrSmall === 'small') {
+    return 1 - Math.floor(this.lightPercentage);
+  } else {
+    return 3 - Math.floor(3 * this.lightPercentage);
+  }
+}
+/*jshint +W040*/
+
+// memoized function (shared across all instances)
+function textureForIndex(index) {
+  var texture = textureCache[index];
+  var frame;
+
+  if ( ! texture ) {
+    frame = spritesheetData.frames[index].frame;
+    texture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h));
+    textureCache[index] = texture;
+  }
+
+  return texture;
+}
+
+module.exports = function() {
+  this.cityIndex = 0;
+  this.largeOrSmall = 'large';
   this.lightPercentage = 1;
-  // The lightmask masks the light to show a half-filled city.
-  this.lightMask = new PIXI.Graphics();
-  this.drawable.addChild(this.lightMask);
-  this.icon = new PIXI.Sprite.fromImage("images/CityIcon.png");
-  this.iconLights = new PIXI.Sprite.fromImage("images/CityIconLights.png");
-  this.iconLights.mask = this.lightMask;
-  this.iconBorder = new PIXI.Sprite.fromImage("images/CityIconBorder.png");
-  this.icon.hitArea =
-    this.iconLights.hitArea =
-    this.iconBorder.hitArea = new PIXI.Rectangle(0, 0, width, height);
-  this.icon.visible = false;
-  this.iconLights.visible = false;
-  this.iconBorder.visible = false;
-  this.drawable.addChild(this.icon);
-  this.drawable.addChild(this.iconLights);
-  this.drawable.addChild(this.iconBorder);
+
+  this.sprite = this.drawable = new PIXI.Sprite(textureForIndex(getTextureIndex.call(this)));
+  this.drawable.interactive = true;
+
   this.update();
 };
+
 /**
  * Updates the graphics object
  */
-module.exports.prototype.update = function () {
-  "use strict";
-  this.lightMask.clear();
-  this.lightMask.beginFill();
-  this.lightMask.drawRect(0, height * (1 - this.lightPercentage), width, height * this.lightPercentage);
-  this.lightMask.endFill();
+module.exports.prototype.update = function() {
+  var texture = textureForIndex(getTextureIndex.call(this));
+
+  // Pixi doesn't seem to check whether we're reassigning or not
+  if (texture !== this.sprite.texture) {
+    this.sprite.setTexture(texture);
+  }
 };
