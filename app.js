@@ -7087,44 +7087,73 @@ Y.prototype.load=function(a){a(this.m)};function Z(a,b){this.c=a;this.e=b}Z.prot
 ;require.register("components/CityIcon", function(exports, require, module) {
 /**
  * CityIcon.js
- * Displays a clickable city, optionally with lights!
- * (Mostly typed with Dvorak!)
+ * Displays a city
  */
-var width = 512,
-  height = 336;
-module.exports = function () {
-  "use strict";
-  this.color = 0;
-  this.drawable = new PIXI.DisplayObjectContainer();
-  this.drawable.interactive = true;
+'use strict';
+
+var baseTexture = new PIXI.BaseTexture.fromImage('images/citiesSpritesheet.png');
+var spritesheetData = require('data/spritesheets/citiesSpritesheet');
+var textureCache = [];
+
+// private methods (reference 'this')
+/*jshint -W040*/
+function getTextureIndex() {
+  var baseIndex = {
+    large: 0,
+    small: 16
+  }[this.largeOrSmall];
+
+  if (baseIndex == null) {
+    throw new Error("Unknown largeOrSmall value '" + this.largeOrSmall + "'");
+  }
+
+  return baseIndex + this.cityIndex + getBlackoutStage.call(this) * 4;
+}
+
+function getBlackoutStage() {
+  if (this.largeOrSmall === 'small') {
+    return 1 - Math.floor(this.lightPercentage);
+  } else {
+    return 3 - Math.floor(3 * this.lightPercentage);
+  }
+}
+/*jshint +W040*/
+
+// memoized function (shared across all instances)
+function textureForIndex(index) {
+  var texture = textureCache[index];
+  var frame;
+
+  if ( ! texture ) {
+    frame = spritesheetData.frames[index].frame;
+    texture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h));
+    textureCache[index] = texture;
+  }
+
+  return texture;
+}
+
+module.exports = function() {
+  this.cityIndex = 0;
+  this.largeOrSmall = 'large';
   this.lightPercentage = 1;
-  // The lightmask masks the light to show a half-filled city.
-  this.lightMask = new PIXI.Graphics();
-  this.drawable.addChild(this.lightMask);
-  this.icon = new PIXI.Sprite.fromImage("images/CityIcon.png");
-  this.iconLights = new PIXI.Sprite.fromImage("images/CityIconLights.png");
-  this.iconLights.mask = this.lightMask;
-  this.iconBorder = new PIXI.Sprite.fromImage("images/CityIconBorder.png");
-  this.icon.hitArea =
-    this.iconLights.hitArea =
-    this.iconBorder.hitArea = new PIXI.Rectangle(0, 0, width, height);
-  this.icon.visible = false;
-  this.iconLights.visible = false;
-  this.iconBorder.visible = false;
-  this.drawable.addChild(this.icon);
-  this.drawable.addChild(this.iconLights);
-  this.drawable.addChild(this.iconBorder);
+
+  this.sprite = this.drawable = new PIXI.Sprite(textureForIndex(getTextureIndex.call(this)));
+  this.drawable.interactive = true;
+
   this.update();
 };
+
 /**
  * Updates the graphics object
  */
-module.exports.prototype.update = function () {
-  "use strict";
-  this.lightMask.clear();
-  this.lightMask.beginFill();
-  this.lightMask.drawRect(0, height * (1 - this.lightPercentage), width, height * this.lightPercentage);
-  this.lightMask.endFill();
+module.exports.prototype.update = function() {
+  var texture = textureForIndex(getTextureIndex.call(this));
+
+  // Pixi doesn't seem to check whether we're reassigning or not
+  if (texture !== this.sprite.texture) {
+    this.sprite.setTexture(texture);
+  }
 };
 
 });
@@ -9511,6 +9540,8 @@ module.exports.prototype.render = function () {
  * Play.js
  * A scene of active play.
  */
+'use strict';
+
 var IOBar = require("components/IOBar"),
   VisualClock = require("components/VisualClock"),
   Flow = require("core/Flow"),
@@ -9521,8 +9552,12 @@ var IOBar = require("components/IOBar"),
 
 var background = PIXI.Sprite.fromImage("images/background-day.png");
 
+var PLAYER_CITY_X = 236;
+var PLAYER_CITY_Y = 466;
+var OTHER_CITY_X = [ 49, 301, 553];
+var OTHER_CITY_Y = [116, 116, 116];
+
 module.exports = function (gameState, stage) {
-  "use strict";
   var i, cityIcon, line;
   this.gameState = gameState;
   this.flow = new Flow(gameState);
@@ -9538,9 +9573,8 @@ module.exports = function (gameState, stage) {
   //this.container.addChild(this.visualClock.drawable);
 
   this.cityIcon = new CityIcon();
-  this.cityIcon.drawable.position.set(154, 520);
-  this.cityIcon.icon.visible = true;
-  this.cityIcon.iconLights.visible = true;
+  this.cityIcon.drawable.position.set(PLAYER_CITY_X, PLAYER_CITY_Y);
+  this.cityIcon.drawable.visible = true;
   this.container.addChild(this.cityIcon.drawable);
 
   this.statusText = new PIXI.Text("", {
@@ -9578,12 +9612,12 @@ module.exports = function (gameState, stage) {
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
     // Create and add city icon
     cityIcon = new CityIcon();
-    this.cityIcons[i] = cityIcon;
-    cityIcon.icon.visible = true;
-    cityIcon.icon.width = cityIcon.icon.height = 238;
-    cityIcon.drawable.position.set(13 + 252 * i, 145);
+    cityIcon.drawable.visible = true;
+    cityIcon.drawable.position.set(OTHER_CITY_X[i], OTHER_CITY_Y[i]);
     this.container.addChild(cityIcon.drawable);
     addCityButtonListener.call(this, cityIcon.drawable, i);
+    cityIcon.largeOrSmall = 'small';
+    this.cityIcons[i] = cityIcon;
 
     // Create and add contract lines
     line = new ContractLine(276 + 135 * i, 601, 185 + 280 * i, 375);
@@ -9654,7 +9688,7 @@ module.exports.prototype.render = function () {
       this.gameState.startTime = estimatedTime;
     }
     // City color!
-    this.cityIcon.icon.tint = this.gameState.CITY_COLORS[this.gameState.cityId];
+    this.cityIcon.cityIndex = this.gameState.cityId;
     player = this.gameState.globals.currentLevel.players[this.gameState.cityId];
     // Update source type text
     // Shrink or grow the inputTypes children to match the current number of input types
@@ -9686,7 +9720,7 @@ module.exports.prototype.render = function () {
     } else {
       if (this.gameState.hasUpdated) {
         cityIcon.drawable.visible = true;
-        cityIcon.icon.tint = this.gameState.CITY_COLORS[city];
+        cityIcon.cityIndex = city;
       }
       // Update contract lines
       for (j = 0; j < 2; j++) {
@@ -9707,6 +9741,7 @@ module.exports.prototype.render = function () {
         contractLine.update();
       }
     }
+    cityIcon.update();
   }
   // Yum. Gotta update all those bars.
   this.totalInputBar.demand = Utils.lerp(this.totalInputBar.demand, this.flow.getTotalDemand(), this.gameState.ANIMATION_RATE);
@@ -9732,17 +9767,20 @@ module.exports.prototype.render = function () {
       }
     }
     this.cityIcon.lightPercentage = Utils.clamp((this.blackoutImminent - elapsed) / this.gameState.globals.currentLevel.blackoutDelay, 0, 1);
-    nextColor = elapsed % this.gameState.BLACKOUT_BLINK <= this.gameState.BLACKOUT_BLINK / 2 && this.cityIcon.lightPercentage < 0.31 ? 0xFF0000 : 0xFFFFFF;
-    if (nextColor === 0xFF0000 && this.cityIcon.iconLights.tint === 0xFFFFFF) {
-      Utils.vibrate(this.gameState.BLACKOUT_VIBRATION);
-    }
-    this.cityIcon.iconLights.tint = nextColor;
+
+
+    // TODO: reinstate some form of blinking? This is what was used prior to the new artwork:
+    // nextColor = elapsed % this.gameState.BLACKOUT_BLINK <= this.gameState.BLACKOUT_BLINK / 2 && this.cityIcon.lightPercentage < 0.31 ? 0xFF0000 : 0xFFFFFF;
+    // if (nextColor === 0xFF0000 && this.cityIcon.iconLights.tint === 0xFFFFFF) {
+    //   Utils.vibrate(this.gameState.BLACKOUT_VIBRATION);
+    // }
+    // this.cityIcon.iconLights.tint = nextColor;
+
     // The commented code is too performance-inefficient in canvas:
     // Utils.lerpColor(0xFFFFFF, 0xFF00000, (elapsed % 400 < 200 ? 1 : 0) * Utils.clamp(3 - 10 * this.cityIcon.lightPercentage, 0, 1));
 
   } else {
     this.cityIcon.lightPercentage = 1;
-    this.cityIcon.iconLights.tint = 0xFFFFFF;
     this.blackoutImminent = null;
   }
   this.cityIcon.update();
@@ -9754,7 +9792,6 @@ module.exports.prototype.render = function () {
   this.gameState.levelTimer.unCache();
 };
 addCityButtonListener = function (cityButton, i) {
-  "use strict";
   var that = this;
   cityButton.click =
     cityButton.tap = function () {
@@ -9771,7 +9808,6 @@ addCityButtonListener = function (cityButton, i) {
   };
 };
 reset = function () {
-  "use strict";
   this.blackoutImminent = null;
   this.lastUpdated = 0;
 };
