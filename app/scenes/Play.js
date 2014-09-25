@@ -14,6 +14,7 @@ var IOBar = require("components/IOBar"),
 
 var background = PIXI.Sprite.fromImage("images/background-day.png");
 
+
 var PLAYER_CITY_X = 236;
 var PLAYER_CITY_Y = 466;
 var OTHER_CITY_X = [ 49, 301, 553];
@@ -36,11 +37,6 @@ module.exports = function (gameState, stage) {
 
   this.visualClock = new VisualClock(768, 800);
   //this.container.addChild(this.visualClock.drawable);
-
-  this.cityIcon = new CityIcon();
-  this.cityIcon.drawable.position.set(PLAYER_CITY_X, PLAYER_CITY_Y);
-  this.cityIcon.drawable.visible = true;
-  this.container.addChild(this.cityIcon.drawable);
 
   this.statusText = new PIXI.Text("", {
     font: "normal 30pt Arial"
@@ -96,7 +92,14 @@ module.exports = function (gameState, stage) {
     cityIcon.largeOrSmall = 'small';
     this.cityIcons[i] = cityIcon;
   }
+
+  // City icon goes in front of contract lines
+  this.cityIcon = new CityIcon();
+  this.cityIcon.drawable.position.set(PLAYER_CITY_X, PLAYER_CITY_Y);
+  this.cityIcon.drawable.visible = true;
+  this.container.addChild(this.cityIcon.drawable);
 };
+
 // Renders the scene
 module.exports.prototype.render = function () {
   var i, j, supplyIndex,
