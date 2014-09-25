@@ -24,8 +24,8 @@ var frameIndicesFor = {
     },
     towards: {
       filling: [82, 117],
-      steadyState: [118, 123],
-      emptying: [124, 155]
+      steadyState: [118, 122],
+      emptying: [123, 155]
     }
   },
   inner: {}
