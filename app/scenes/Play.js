@@ -10,6 +10,8 @@ var IOBar = require("components/IOBar"),
   ContractLine = require("components/ContractLine"),
   addCityButtonListener, reset;
 
+var background = PIXI.Sprite.fromImage("images/background-day.png");
+
 module.exports = function (gameState, stage) {
   "use strict";
   var i, cityIcon, line;
@@ -20,10 +22,11 @@ module.exports = function (gameState, stage) {
 
   this.container = new PIXI.DisplayObjectContainer();
   this.container.visible = false;
+  this.container.addChild(background);
   stage.addChild(this.container);
 
   this.visualClock = new VisualClock(768, 800);
-  this.container.addChild(this.visualClock.drawable);
+  //this.container.addChild(this.visualClock.drawable);
 
   this.cityIcon = new CityIcon();
   this.cityIcon.drawable.position.set(154, 520);

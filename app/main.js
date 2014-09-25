@@ -23,6 +23,10 @@ WebFont.load({
   inactive: start
 });
 
+// temporarily add background icon
+var background = PIXI.Sprite.fromImage("images/background-day.png");
+stages.join.background = background;
+stages.play.background = background;
 
 // Set everything up
 gameState.connect(window.location.hash.replace(/[^a-z]+/g, "") || "default");

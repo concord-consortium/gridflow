@@ -19,10 +19,14 @@ function setCountdownStep(step) {
 }
 
 module.exports = function (gameState, stage) {
+  var background = new PIXI.Sprite.fromImage("images/background-day.png");
+  background.position.x = background.position.y = 0;
+
   this.gameState = gameState;
 
   this.container = new PIXI.DisplayObjectContainer();
   this.container.visible = false;
+  this.container.addChild(background);
   stage.addChild(this.container);
 
   this.headerBar = new HeaderBar(0, 0, 768, 105);
