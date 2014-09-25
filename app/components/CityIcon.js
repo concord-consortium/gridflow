@@ -7,14 +7,15 @@
 var baseTexture = new PIXI.BaseTexture.fromImage('images/citiesSpritesheet.png');
 var spritesheetData = require('data/spritesheets/citiesSpritesheet');
 var textureCache = [];
+var TEXTURE_OFFSETS = {
+  large: 0,
+  small: 16
+};
 
 // private methods (reference 'this')
 /*jshint -W040*/
 function getTextureIndex() {
-  var baseIndex = {
-    large: 0,
-    small: 16
-  }[this.largeOrSmall];
+  var baseIndex = TEXTURE_OFFSETS[this.largeOrSmall];
 
   if (baseIndex == null) {
     throw new Error("Unknown largeOrSmall value '" + this.largeOrSmall + "'");
