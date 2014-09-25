@@ -20,9 +20,8 @@ var PLAYER_CITY_Y = 466;
 var OTHER_CITY_X = [ 49, 301, 553];
 var OTHER_CITY_Y = [116, 116, 116];
 
-// TODO
-var CONTRACT_LINE_X = [];
-var CONTRACT_LINE_Y = [];
+var CONTRACT_LINE_X = [300, 0, 470];
+var CONTRACT_LINE_Y = [289, 0, 289];
 
 module.exports = function (gameState, stage) {
   var i, cityIcon, line, lineIndex;
@@ -77,6 +76,18 @@ module.exports = function (gameState, stage) {
   // The contractLines array is interleaved: from, to, from, to, from, to.
   this.contractLines = [null, null, null, null, null, null];
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
+
+    // Create and add contract lines.
+    for (var j = 0; j < 2; j++) {
+      lineIndex = 2 * i + j;
+      line = new ContractLine(i, j === 0 ? 'away' : 'towards');
+      this.contractLines[lineIndex] = line;
+      this.container.addChild(line.drawable);
+      line.drawable.position.set(CONTRACT_LINE_X[i], CONTRACT_LINE_Y[i]);
+      // left outer contract line is mirror image of right outer conract line
+      line.drawable.scale = new PIXI.Point(i === 2 ? 1 : -1, 1);
+    }
+
     // Create and add city icon
     cityIcon = new CityIcon();
     cityIcon.drawable.visible = true;
@@ -85,15 +96,6 @@ module.exports = function (gameState, stage) {
     addCityButtonListener.call(this, cityIcon.drawable, i);
     cityIcon.largeOrSmall = 'small';
     this.cityIcons[i] = cityIcon;
-
-    // Create and add contract lines. Oh, loops...
-    for (var j = 0; j < 2; j++) {
-      lineIndex = 2 * i + j;
-      line = new ContractLine(i, !!j);
-      this.contractLines[lineIndex] = line;
-      this.container.addChild(line.drawable);
-      line.drawable.position.set(CONTRACT_LINE_X[lineIndex], CONTRACT_LINE_Y[lineIndex]);
-    }
   }
 };
 // Renders the scene
@@ -198,12 +200,11 @@ module.exports.prototype.render = function () {
           contractLine.drawable.visible = true;
         }
         if (contract == null) {
-          contractLine.active = false;
-        } else {
-          contractLine.active = true;
-          contractLength = this.gameState.globals.currentLevel.contractLength;
-          contractLine.contractLength = contractLength;
-          contractLine.contractAge = contractLength - (contract.until - elapsed);
+          contractLine.hasContract = false;
+        } else if (! contractLine.hasContract ) {
+          contractLine.contractStart = elapsed;
+          contractLine.hasContract = true;
+          contractLine.contractLength = this.gameState.globals.currentLevel.contractLength;
         }
         contractLine.elapsed = elapsed;
         contractLine.update();
