@@ -4,6 +4,11 @@
  */
 'use strict';
 
+var backgroundTextureFor = {
+  outer: new PIXI.Texture.fromImage('images/outerContractLineBackground.png'),
+  inner: new PIXI.Texture.fromImage('images/innerContractLineBackground.png')
+};
+
 // base texture for contract lines to outermost cities
 var baseTextureFor = {
   outer: new PIXI.BaseTexture.fromImage('images/outerContractLineDotsSpritesheet.png'),
@@ -36,7 +41,7 @@ var dotOffsetFor = {
   inner: { x: 0, y: 0 }
 };
 
-var ANIMATION_FPS = 6;
+var ANIMATION_FPS = 24;
 var MS_PER_FRAME = 1000 / ANIMATION_FPS;
 
 var EMPTY_TEXTURE = new PIXI.Texture(baseTextureFor.outer, new PIXI.Rectangle(0, 0, 0, 0));
@@ -51,22 +56,18 @@ function msToFrames(ms) {
 
 /* jshint -W040*/
 function updateDots() {
-  var innerOrOuter;
   var frameIndices;
   var spritesheetData;
   var baseTexture;
 
-  if (this.cityPair === 1) {
-    innerOrOuter = 'inner';
+  if (this.innerOrOuter === 'inner') {
     // we don't have artwork for the middle city pair yet
     return;
-  } else {
-    innerOrOuter = 'outer';
   }
 
-  frameIndices = frameIndicesFor[innerOrOuter][this.awayOrTowards];
-  spritesheetData = spritesheetDataFor[innerOrOuter];
-  baseTexture = baseTextureFor[innerOrOuter];
+  frameIndices = frameIndicesFor[this.innerOrOuter][this.awayOrTowards];
+  spritesheetData = spritesheetDataFor[this.innerOrOuter];
+  baseTexture = baseTextureFor[this.innerOrOuter];
 
   if (this.contractLength > 0) {
     var nEmptying = nFrames(frameIndices, 'emptying');
@@ -92,21 +93,41 @@ function updateDots() {
 }
 
 function setDotsTexture(index, baseTexture, spritesheetData) {
-  // TODO cache!!!
+
   var frame = spritesheetData.frames[index].frame;
   var offset = spritesheetData.frames[index].spriteSourceSize;
 
-  var texture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h));
-  this.dots.setTexture(texture);
-  this.dots.x = offset.x;
-  this.dots.y = offset.y;
+  if (index !== this._lastIndex) {
+    // TODO also cache textures
+    var texture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h));
+    this.dots.setTexture(texture);
+    this.dots.x = offset.x;
+    this.dots.y = offset.y;
+    this._lastIndex = index;
+  }
 }
 /* jshint +W040*/
 
 module.exports = function(cityPair, awayOrTowards) {
+  this.innerOrOuter = this.cityPair === 1 ? 'inner' : 'outer';
+
   this.drawable = new PIXI.DisplayObjectContainer();
+
+  // hack, because the background image has both the 'away' line and the 'from' line
+  // (if both 'away' and 'toward' contractLines show it, then two identical sprites
+  // are added, and one is on top of the other's dots)
+  if (awayOrTowards === 'away') {
+    this.background = new PIXI.Sprite(backgroundTextureFor[this.innerOrOuter]);
+    this.drawable.addChild(this.background);
+  }
+
+  this.dotsContainer = new PIXI.DisplayObjectContainer();
+  this.dotsContainer.x = dotOffsetFor[this.innerOrOuter].x;
+  this.dotsContainer.y = dotOffsetFor[this.innerOrOuter].y;
+
   this.dots = new PIXI.Sprite(EMPTY_TEXTURE);
-  this.drawable.addChild(this.dots);
+  this.dotsContainer.addChild(this.dots);
+  this.drawable.addChild(this.dotsContainer);
 
   this.cityPair = cityPair; // 0, 1, or 2
   this.awayOrTowards = awayOrTowards; // 'away' = away from player
@@ -123,9 +144,9 @@ module.exports = function(cityPair, awayOrTowards) {
  */
 module.exports.prototype.update = function() {
   if ( this.hasContract ) {
-    this.dots.visible = true;
+    this.dotsContainer.visible = true;
     updateDots.call(this);
   } else {
-    this.dots.visible = false;
+    this.dotsContainer.visible = false;
   }
 };
