@@ -2,63 +2,151 @@
  * ContractLine.js
  * A line that represents a contract.
  */
-var Utils = require("core/Utils"),
-  ants = 10,
-  // The length ratio of ant to not-ant.
-  antRatio = 0.4,
-  // The width of one unit of power.
-  width = 20,
-  // The margin between the ant and the side of the bar.
-  antSubtractedWidth = 10;
+'use strict';
 
-module.exports = function (xSource, ySource, xDest, yDest) {
-  "use strict";
-  this.xSource = xSource || 0;
-  this.ySource = ySource || 0;
-  this.xDest = xDest || 0;
-  this.yDest = yDest || 0;
-  // The progression of the contract, or 1 - time remaining
-  this.progress = 0;
-  // The amount of energy (the width)
-  this.amount = 1;
-  // The current time to drive the ants
+var backgroundTextureFor = {
+  outer: new PIXI.Texture.fromImage('images/outerContractLineBackground.png'),
+  inner: new PIXI.Texture.fromImage('images/innerContractLineBackground.png')
+};
+
+// base texture for contract lines to outermost cities
+var baseTextureFor = {
+  outer: new PIXI.BaseTexture.fromImage('images/outerContractLineDotsSpritesheet.png'),
+  inner: null
+};
+
+var spritesheetDataFor = {
+  outer: require('data/spritesheets/outerContractLineDotsSpritesheet'),
+  inner: null
+};
+
+var frameIndicesFor = {
+  outer: {
+    away: {
+      filling: [0, 39],
+      steadyState: [40, 43],
+      emptying: [44, 81]
+    },
+    towards: {
+      filling: [82, 117],
+      steadyState: [118, 121],
+      emptying: [122, 155]
+    }
+  },
+  inner: {}
+};
+
+var dotOffsetFor = {
+  outer: { x: 2, y: 82 },
+  inner: { x: 0, y: 0 }
+};
+
+var ANIMATION_FPS = 24;
+var MS_PER_FRAME = 1000 / ANIMATION_FPS;
+
+var EMPTY_TEXTURE = new PIXI.Texture(baseTextureFor.outer, new PIXI.Rectangle(0, 0, 0, 0));
+
+function nFrames(indices, which) {
+  return indices[which][1] - indices[which][0] + 1;
+}
+
+function msToFrames(ms) {
+  return Math.floor(ms/MS_PER_FRAME);
+}
+
+/* jshint -W040*/
+function updateDots() {
+  var frameIndices;
+  var spritesheetData;
+  var baseTexture;
+
+  if (this.innerOrOuter === 'inner') {
+    // we don't have artwork for the middle city pair yet
+    return;
+  }
+
+  frameIndices = frameIndicesFor[this.innerOrOuter][this.awayOrTowards];
+  spritesheetData = spritesheetDataFor[this.innerOrOuter];
+  baseTexture = baseTextureFor[this.innerOrOuter];
+
+  if (this.contractLength > 0) {
+    var nEmptying = nFrames(frameIndices, 'emptying');
+    var framesFromEnd = msToFrames(this.contractStart + this.contractLength - this.elapsed);
+
+    if (framesFromEnd < nEmptying) {
+      setDotsTexture.call(this, frameIndices.emptying[1] - framesFromEnd, baseTexture, spritesheetData);
+      return;
+    }
+  }
+
+  var framesFromStart = msToFrames(this.elapsed - this.contractStart);
+  var nFilling = nFrames(frameIndices, 'filling');
+
+  if (framesFromStart < nFilling) {
+    setDotsTexture.call(this, frameIndices.filling[0] + framesFromStart, baseTexture, spritesheetData);
+    return;
+   } else {
+     var period = nFrames(frameIndices, 'steadyState');
+     var offset = (framesFromStart - nFilling) % period;
+     setDotsTexture.call(this, frameIndices.steadyState[0] + offset, baseTexture, spritesheetData);
+   }
+}
+
+function setDotsTexture(index, baseTexture, spritesheetData) {
+
+  var frame = spritesheetData.frames[index].frame;
+  var offset = spritesheetData.frames[index].spriteSourceSize;
+
+  if (index !== this._lastIndex) {
+    // TODO also cache textures
+    var texture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h));
+    this.dots.setTexture(texture);
+    this.dots.x = offset.x;
+    this.dots.y = offset.y;
+    this._lastIndex = index;
+  }
+}
+/* jshint +W040*/
+
+module.exports = function(cityPair, awayOrTowards) {
+  this.innerOrOuter = this.cityPair === 1 ? 'inner' : 'outer';
+
+  this.drawable = new PIXI.DisplayObjectContainer();
+
+  // hack, because the background image has both the 'away' line and the 'from' line
+  // (if both 'away' and 'toward' contractLines show it, then two identical sprites
+  // are added, and one is on top of the other's dots)
+  if (awayOrTowards === 'away') {
+    this.background = new PIXI.Sprite(backgroundTextureFor[this.innerOrOuter]);
+    this.drawable.addChild(this.background);
+  }
+
+  this.dotsContainer = new PIXI.DisplayObjectContainer();
+  this.dotsContainer.x = dotOffsetFor[this.innerOrOuter].x;
+  this.dotsContainer.y = dotOffsetFor[this.innerOrOuter].y;
+
+  this.dots = new PIXI.Sprite(EMPTY_TEXTURE);
+  this.dotsContainer.addChild(this.dots);
+  this.drawable.addChild(this.dotsContainer);
+
+  this.cityPair = cityPair; // 0, 1, or 2
+  this.awayOrTowards = awayOrTowards; // 'away' = away from player
+  this.hasContract = false;
+  this.conractStart = 0;
+  this.contractLength = 0;
   this.elapsed = 0;
-  this.color = 0;
-  this.active = false;
-  this.drawable = new PIXI.Graphics();
+
   this.update();
 };
+
 /**
  * Updates the graphics object
  */
-module.exports.prototype.update = function () {
-  "use strict";
-  var elapsedOffset = (this.elapsed % 200) / 200,
-    i, progressFrom, progressTo;
-  this.drawable.clear();
-  if (this.active) {
-    this.drawable.lineStyle(width * this.amount, 0xFFFFFF, 0.3);
+module.exports.prototype.update = function() {
+  if ( this.hasContract ) {
+    this.dotsContainer.visible = true;
+    updateDots.call(this);
   } else {
-    this.drawable.lineStyle(width, 0xFFFFFF, 0.2);
-  }
-  this.drawable.moveTo(this.xSource, this.ySource);
-  this.drawable.lineTo(this.xDest, this.yDest);
-  if (this.active) {
-    this.drawable.lineStyle(width * this.amount, this.color);
-    this.drawable.moveTo(this.xSource, this.ySource);
-    this.drawable.lineTo(Utils.lerp(this.xSource, this.xDest, this.progress), Utils.lerp(this.ySource, this.yDest, this.progress));
-  }
-  if (this.active) {
-    // Draw back line
-    // Draw marching ants
-    for (i = -1; i < ants; i++) {
-      progressFrom = Utils.clamp((i + elapsedOffset) / ants, 0, 1);
-      progressTo = Utils.clamp((i + elapsedOffset + antRatio) / ants, 0, 1);
-      if (progressFrom < progressTo) {
-        this.drawable.lineStyle(width * this.amount - antSubtractedWidth, 0x000000, 0.5);
-        this.drawable.moveTo(Utils.lerp(this.xSource, this.xDest, progressFrom), Utils.lerp(this.ySource, this.yDest, progressFrom));
-        this.drawable.lineTo(Utils.lerp(this.xSource, this.xDest, progressTo), Utils.lerp(this.ySource, this.yDest, progressTo));
-      }
-    }
+    this.dotsContainer.visible = false;
   }
 };

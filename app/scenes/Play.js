@@ -14,13 +14,17 @@ var IOBar = require("components/IOBar"),
 
 var background = PIXI.Sprite.fromImage("images/background-day.png");
 
+
 var PLAYER_CITY_X = 236;
 var PLAYER_CITY_Y = 466;
 var OTHER_CITY_X = [ 49, 301, 553];
 var OTHER_CITY_Y = [116, 116, 116];
 
+var CONTRACT_LINE_X = [300, 0, 470];
+var CONTRACT_LINE_Y = [204, 0, 204];
+
 module.exports = function (gameState, stage) {
-  var i, cityIcon, line;
+  var i, cityIcon, line, lineIndex;
   this.gameState = gameState;
   this.flow = new Flow(gameState);
   this.lastUpdated = 0;
@@ -33,11 +37,6 @@ module.exports = function (gameState, stage) {
 
   this.visualClock = new VisualClock(768, 800);
   //this.container.addChild(this.visualClock.drawable);
-
-  this.cityIcon = new CityIcon();
-  this.cityIcon.drawable.position.set(PLAYER_CITY_X, PLAYER_CITY_Y);
-  this.cityIcon.drawable.visible = true;
-  this.container.addChild(this.cityIcon.drawable);
 
   this.statusText = new PIXI.Text("", {
     font: "normal 30pt Arial"
@@ -72,6 +71,18 @@ module.exports = function (gameState, stage) {
   // The contractLines array is interleaved: from, to, from, to, from, to.
   this.contractLines = [null, null, null, null, null, null];
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
+
+    // Create and add contract lines.
+    for (var j = 0; j < 2; j++) {
+      lineIndex = 2 * i + j;
+      line = new ContractLine(i, j === 0 ? 'away' : 'towards');
+      this.contractLines[lineIndex] = line;
+      this.container.addChild(line.drawable);
+      line.drawable.position.set(CONTRACT_LINE_X[i], CONTRACT_LINE_Y[i]);
+      // left outer contract line is mirror image of right outer conract line
+      line.drawable.scale = new PIXI.Point(i === 2 ? 1 : -1, 1);
+    }
+
     // Create and add city icon
     cityIcon = new CityIcon();
     cityIcon.drawable.visible = true;
@@ -80,26 +91,25 @@ module.exports = function (gameState, stage) {
     addCityButtonListener.call(this, cityIcon.drawable, i);
     cityIcon.largeOrSmall = 'small';
     this.cityIcons[i] = cityIcon;
-
-    // Create and add contract lines
-    line = new ContractLine(276 + 135 * i, 601, 185 + 280 * i, 375);
-    this.contractLines[2 * i] = line;
-    this.container.addChild(line.drawable);
-
-    line = new ContractLine(125 + 280 * i, 375, 222 + 135 * i, 601);
-    this.contractLines[2 * i + 1] = line;
-    this.container.addChild(line.drawable);
   }
+
+  // City icon goes in front of contract lines
+  this.cityIcon = new CityIcon();
+  this.cityIcon.drawable.position.set(PLAYER_CITY_X, PLAYER_CITY_Y);
+  this.cityIcon.drawable.visible = true;
+  this.container.addChild(this.cityIcon.drawable);
 };
+
 // Renders the scene
 module.exports.prototype.render = function () {
-  "use strict";
   var i, j, supplyIndex,
     elapsed, estimatedTime, dayProgression,
     city, cityIcon, icon,
     contractLine, contract,
     nextColor,
     player;
+  var contractLength;
+
   this.gameState.levelTimer.cache();
   elapsed = this.gameState.levelTimer.getElapsed();
   // Listen to the host and stop when the host does.
@@ -190,14 +200,13 @@ module.exports.prototype.render = function () {
         contractLine = this.contractLines[2 * i + j];
         if (this.gameState.hasUpdated) {
           contractLine.drawable.visible = true;
-          contractLine.color = this.gameState.CITY_COLORS[city];
         }
         if (contract == null) {
-          contractLine.active = false;
-        } else {
-          contractLine.active = true;
-          contractLine.amount = contract.amount;
-          contractLine.progress = this.gameState.globals.currentLevel.contractLength > 0 ? Utils.clamp((contract.until - elapsed) / this.gameState.globals.currentLevel.contractLength, 0, 1) : 1;
+          contractLine.hasContract = false;
+        } else if (! contractLine.hasContract ) {
+          contractLine.contractStart = elapsed;
+          contractLine.hasContract = true;
+          contractLine.contractLength = this.gameState.globals.currentLevel.contractLength;
         }
         contractLine.elapsed = elapsed;
         contractLine.update();
