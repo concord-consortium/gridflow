@@ -14,13 +14,18 @@ var IOBar = require("components/IOBar"),
 
 var background = PIXI.Sprite.fromImage("images/background-day.png");
 
+
 var PLAYER_CITY_X = 236;
 var PLAYER_CITY_Y = 466;
 var OTHER_CITY_X = [ 49, 301, 553];
 var OTHER_CITY_Y = [116, 116, 116];
 
+// TODO
+var CONTRACT_LINE_X = [];
+var CONTRACT_LINE_Y = [];
+
 module.exports = function (gameState, stage) {
-  var i, cityIcon, line;
+  var i, cityIcon, line, lineIndex;
   this.gameState = gameState;
   this.flow = new Flow(gameState);
   this.lastUpdated = 0;
@@ -81,25 +86,26 @@ module.exports = function (gameState, stage) {
     cityIcon.largeOrSmall = 'small';
     this.cityIcons[i] = cityIcon;
 
-    // Create and add contract lines
-    line = new ContractLine(276 + 135 * i, 601, 185 + 280 * i, 375);
-    this.contractLines[2 * i] = line;
-    this.container.addChild(line.drawable);
-
-    line = new ContractLine(125 + 280 * i, 375, 222 + 135 * i, 601);
-    this.contractLines[2 * i + 1] = line;
-    this.container.addChild(line.drawable);
+    // Create and add contract lines. Oh, loops...
+    for (var j = 0; j < 2; j++) {
+      lineIndex = 2 * i + j;
+      line = new ContractLine(i, !!j);
+      this.contractLines[lineIndex] = line;
+      this.container.addChild(line.drawable);
+      line.drawable.position.set(CONTRACT_LINE_X[lineIndex], CONTRACT_LINE_Y[lineIndex]);
+    }
   }
 };
 // Renders the scene
 module.exports.prototype.render = function () {
-  "use strict";
   var i, j, supplyIndex,
     elapsed, estimatedTime, dayProgression,
     city, cityIcon, icon,
     contractLine, contract,
     nextColor,
     player;
+  var contractLength;
+
   this.gameState.levelTimer.cache();
   elapsed = this.gameState.levelTimer.getElapsed();
   // Listen to the host and stop when the host does.
@@ -190,14 +196,14 @@ module.exports.prototype.render = function () {
         contractLine = this.contractLines[2 * i + j];
         if (this.gameState.hasUpdated) {
           contractLine.drawable.visible = true;
-          contractLine.color = this.gameState.CITY_COLORS[city];
         }
         if (contract == null) {
           contractLine.active = false;
         } else {
           contractLine.active = true;
-          contractLine.amount = contract.amount;
-          contractLine.progress = this.gameState.globals.currentLevel.contractLength > 0 ? Utils.clamp((contract.until - elapsed) / this.gameState.globals.currentLevel.contractLength, 0, 1) : 1;
+          contractLength = this.gameState.globals.currentLevel.contractLength;
+          contractLine.contractLength = contractLength;
+          contractLine.contractAge = contractLength - (contract.until - elapsed);
         }
         contractLine.elapsed = elapsed;
         contractLine.update();
