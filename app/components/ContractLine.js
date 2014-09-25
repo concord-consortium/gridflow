@@ -24,14 +24,19 @@ var frameIndicesFor = {
     },
     towards: {
       filling: [82, 117],
-      steadyState: [118, 122],
-      emptying: [123, 155]
+      steadyState: [118, 121],
+      emptying: [122, 155]
     }
   },
   inner: {}
 };
 
-var ANIMATION_FPS = 24;
+var dotOffsetFor = {
+  outer: { x: 2, y: 82 },
+  inner: { x: 0, y: 0 }
+};
+
+var ANIMATION_FPS = 6;
 var MS_PER_FRAME = 1000 / ANIMATION_FPS;
 
 var EMPTY_TEXTURE = new PIXI.Texture(baseTextureFor.outer, new PIXI.Rectangle(0, 0, 0, 0));
