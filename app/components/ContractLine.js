@@ -12,12 +12,12 @@ var backgroundTextureFor = {
 // base texture for contract lines to outermost cities
 var baseTextureFor = {
   outer: new PIXI.BaseTexture.fromImage('images/outerContractLineDotsSpritesheet.png'),
-  inner: null
+  inner: new PIXI.BaseTexture.fromImage('images/innerContractLineDotsSpritesheet.png')
 };
 
 var spritesheetDataFor = {
   outer: require('data/spritesheets/outerContractLineDotsSpritesheet'),
-  inner: null
+  inner: require('data/spritesheets/innerContractLineDotsSpritesheet')
 };
 
 var frameIndicesFor = {
@@ -33,12 +33,23 @@ var frameIndicesFor = {
       emptying: [122, 155]
     }
   },
-  inner: {}
+  inner: {
+    away: {
+      filling: [0, 38],
+      steadyState: [39, 42],
+      emptying: [43, 81]
+    },
+    towards: {
+      filling: [82, 117],
+      steadyState: [115, 118],
+      emptying: [122, 155]
+    }
+  }
 };
 
 var dotOffsetFor = {
-  outer: { x: 2, y: 82 },
-  inner: { x: 0, y: 0 }
+  outer: { x: 12, y: 85 },
+  inner: { x: 14, y: 101 }
 };
 
 var ANIMATION_FPS = 24;
@@ -59,11 +70,6 @@ function updateDots() {
   var frameIndices;
   var spritesheetData;
   var baseTexture;
-
-  if (this.innerOrOuter === 'inner') {
-    // we don't have artwork for the middle city pair yet
-    return;
-  }
 
   frameIndices = frameIndicesFor[this.innerOrOuter][this.awayOrTowards];
   spritesheetData = spritesheetDataFor[this.innerOrOuter];
@@ -109,7 +115,8 @@ function setDotsTexture(index, baseTexture, spritesheetData) {
 /* jshint +W040*/
 
 module.exports = function(cityPair, awayOrTowards) {
-  this.innerOrOuter = this.cityPair === 1 ? 'inner' : 'outer';
+
+  this.innerOrOuter = cityPair === 1 ? 'inner' : 'outer';
 
   this.drawable = new PIXI.DisplayObjectContainer();
 

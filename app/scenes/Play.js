@@ -20,8 +20,8 @@ var PLAYER_CITY_Y = 466;
 var OTHER_CITY_X = [ 49, 301, 553];
 var OTHER_CITY_Y = [116, 116, 116];
 
-var CONTRACT_LINE_X = [300, 0, 470];
-var CONTRACT_LINE_Y = [204, 0, 204];
+var CONTRACT_LINE_X = [310, 479, 812];
+var CONTRACT_LINE_Y = [204, 204, 204];
 
 module.exports = function (gameState, stage) {
   var i, cityIcon, line, lineIndex;
