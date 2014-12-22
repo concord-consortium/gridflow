@@ -1,1 +1,17 @@
-body{margin:0;position:absolute;left:0;right:0;top:0;bottom:0;overflow:hidden;text-align:center;background-color:#000}canvas{height:100%}
+body {
+  margin: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  text-align: center;
+  background-color: black;
+}
+canvas {
+  height: 100%;
+}
+
+
+/*# sourceMappingURL=app.css.map*/
