@@ -77,7 +77,7 @@ function updateDots() {
 
   if (this.contractLength > 0) {
     var nEmptying = nFrames(frameIndices, 'emptying');
-    var framesFromEnd = msToFrames(this.contractStart + this.contractLength - this.elapsed);
+    var framesFromEnd = msToFrames(Math.max(0, this.contractStart + this.contractLength - this.elapsed));
 
     if (framesFromEnd < nEmptying) {
       setDotsTexture.call(this, frameIndices.emptying[1] - framesFromEnd, baseTexture, spritesheetData);
