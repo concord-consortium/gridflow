@@ -217,7 +217,6 @@ module.exports.prototype.render = function () {
   // Yum. Gotta update all those bars.
   this.totalInputBar.demand = Utils.lerp(this.totalInputBar.demand, this.flow.getTotalDemand(), this.gameState.ANIMATION_RATE);
   this.totalInputBar.supply = Utils.lerp(this.totalInputBar.supply, this.flow.supplySum, this.gameState.ANIMATION_RATE);
-  this.totalInputBar.supplyRounded = Math.min(this.flow.supplySum, Math.floor(this.totalInputBar.supply + 0.1));
   this.totalInputBar.update();
 
   // Handle that blackout
