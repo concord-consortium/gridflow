@@ -133,7 +133,7 @@ function makeButtonGraphic() {
   button.endFill();
 
   return button;
-};
+}
 
 module.exports = function (x, y, width, height) {
   var that = this;
