@@ -30,17 +30,17 @@ module.exports = function(maxValue) {
 
   this.maxValue = maxValue;
 
+  // graphical elements
   this.drawable = new PIXI.DisplayObjectContainer();
-
   this._background = new PIXI.Sprite(getTexture('background'));
-
   this._foreground = new PIXI.Sprite(getTexture('foreground'));
   this._foregroundMask = new PIXI.Graphics();
-  this._foreground.mask = this._foregroundMask;
-
-  // the needle
   this._needle = new PIXI.Sprite(getTexture('needle'));
 
+  // foreground (dark yellow) will be clipped to indicate available supply
+  this._foreground.mask = this._foregroundMask;
+
+  // center of needle indicates demand; bottom of needle "rests" on bottom of meter
   this._needle.anchor.x = 0.5;
   this._needle.anchor.y = 1;
   this._needle.y = this._background.height;
@@ -56,6 +56,8 @@ module.exports = function(maxValue) {
  * Updates the graphics object
  */
 module.exports.prototype.update = function() {
+
+  // this clips the foreground element
   this._foregroundMask.clear();
   this._foregroundMask.beginFill();
   this._foregroundMask.drawRect(0, 0, xPositionForValue.call(this, this.supply), this._background.height);
