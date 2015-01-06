@@ -65,8 +65,9 @@ function msToFrames(ms) {
   return Math.floor(ms/MS_PER_FRAME);
 }
 
-/* jshint -W040*/
+
 function updateDots() {
+  /*jshint -W040*/
   var frameIndices;
   var spritesheetData;
   var baseTexture;
@@ -96,10 +97,11 @@ function updateDots() {
      var offset = (framesFromStart - nFilling) % period;
      setDotsTexture.call(this, frameIndices.steadyState[0] + offset, baseTexture, spritesheetData);
    }
+   /*jshint +W040*/
 }
 
 function setDotsTexture(index, baseTexture, spritesheetData) {
-
+  /*jshint -W040*/
   var frame = spritesheetData.frames[index].frame;
   var offset = spritesheetData.frames[index].spriteSourceSize;
 
@@ -111,8 +113,9 @@ function setDotsTexture(index, baseTexture, spritesheetData) {
     this.dots.y = offset.y;
     this._lastIndex = index;
   }
+  /*jshint +W040*/
 }
-/* jshint +W040*/
+
 
 module.exports = function(cityPair, awayOrTowards) {
 
