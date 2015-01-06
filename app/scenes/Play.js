@@ -44,9 +44,9 @@ module.exports = function (gameState, stage) {
   this.statusText.position.set(400, 10);
   this.container.addChild(this.statusText);
 
-  this.totalInputBar = new IOBar(746, 56, this.gameState.MAX_ENERGY);
+  this.totalInputBar = new IOBar(this.gameState.MAX_ENERGY);
   this.container.addChild(this.totalInputBar.drawable);
-  this.totalInputBar.drawable.position.set(11, 900);
+  this.totalInputBar.drawable.position.set(37, 917);
 
   this.inputTypes = new PIXI.DisplayObjectContainer();
   this.container.addChild(this.inputTypes);
