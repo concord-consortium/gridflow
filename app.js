@@ -7227,8 +7227,9 @@ function msToFrames(ms) {
   return Math.floor(ms/MS_PER_FRAME);
 }
 
-/* jshint -W040*/
+
 function updateDots() {
+  /*jshint -W040*/
   var frameIndices;
   var spritesheetData;
   var baseTexture;
@@ -7239,7 +7240,7 @@ function updateDots() {
 
   if (this.contractLength > 0) {
     var nEmptying = nFrames(frameIndices, 'emptying');
-    var framesFromEnd = msToFrames(this.contractStart + this.contractLength - this.elapsed);
+    var framesFromEnd = msToFrames(Math.max(0, this.contractStart + this.contractLength - this.elapsed));
 
     if (framesFromEnd < nEmptying) {
       setDotsTexture.call(this, frameIndices.emptying[1] - framesFromEnd, baseTexture, spritesheetData);
@@ -7258,10 +7259,11 @@ function updateDots() {
      var offset = (framesFromStart - nFilling) % period;
      setDotsTexture.call(this, frameIndices.steadyState[0] + offset, baseTexture, spritesheetData);
    }
+   /*jshint +W040*/
 }
 
 function setDotsTexture(index, baseTexture, spritesheetData) {
-
+  /*jshint -W040*/
   var frame = spritesheetData.frames[index].frame;
   var offset = spritesheetData.frames[index].spriteSourceSize;
 
@@ -7273,8 +7275,9 @@ function setDotsTexture(index, baseTexture, spritesheetData) {
     this.dots.y = offset.y;
     this._lastIndex = index;
   }
+  /*jshint +W040*/
 }
-/* jshint +W040*/
+
 
 module.exports = function(cityPair, awayOrTowards) {
 
@@ -7458,7 +7461,7 @@ function makeButtonGraphic() {
   button.endFill();
 
   return button;
-};
+}
 
 module.exports = function (x, y, width, height) {
   var that = this;
@@ -7582,46 +7585,67 @@ require.register("components/IOBar", function(exports, require, module) {
 /**
  * IOBar.js
  * Shows the supply and demand in one handy bar!
- * (Typed with Dvorak!)
  */
-module.exports = function (width, height, maxEnergy) {
-  "use strict";
-  this.width = width || 0;
-  this.height = height || 0;
-  this.maxEnergy = maxEnergy || 0;
+'use strict';
+
+var baseTexture = new PIXI.BaseTexture.fromImage('images/meterSpritesheet.png');
+var spritesheetData = require('data/spritesheets/meterSpritesheet');
+
+function getTexture(name) {
+  // we don't bother caching, because we only expect to be instantiated 1x
+  var frame = _.where(spritesheetData.frames, { filename: name })[0].frame;
+  return new PIXI.Texture(baseTexture, new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h));
+}
+
+var LEFT_EDGE = spritesheetData.leftEdge;
+var RIGHT_EDGE = spritesheetData.rightEdge;
+
+function xPositionForValue(value) {
+  /* jshint -W040 */
+  return (RIGHT_EDGE - LEFT_EDGE) * value / this.maxValue;
+  /* jshint +W040 */
+}
+
+module.exports = function(maxValue) {
+
+  // state properties -- client code will set these before calling update()
   this.supply = 0;
-  this.supplyRounded = 0;
   this.demand = 0;
-  // The gap between distinct energy units
-  this.gap = 6;
-  // The width of the demand line (which is actually a rectangle)
-  this.demandWidth = 6;
-  // The amount that the demand line protrudes from the top and bottom (which is actually a rectangle)
-  this.demandHeight = 15;
-  this.drawable = new PIXI.Graphics();
+
+  this.maxValue = maxValue;
+
+  this.drawable = new PIXI.DisplayObjectContainer();
+
+  this._background = new PIXI.Sprite(getTexture('background'));
+
+  this._foreground = new PIXI.Sprite(getTexture('foreground'));
+  this._foregroundMask = new PIXI.Graphics();
+  this._foreground.mask = this._foregroundMask;
+
+  // the needle
+  this._needle = new PIXI.Sprite(getTexture('needle'));
+
+  this._needle.anchor.x = 0.5;
+  this._needle.anchor.y = 1;
+  this._needle.y = this._background.height;
+
+  [this._background, this._foreground, this._foregroundMask, this._needle].forEach(function(child) {
+    this.drawable.addChild(child);
+  }.bind(this));
+
   this.update();
 };
+
 /**
  * Updates the graphics object
  */
-module.exports.prototype.update = function () {
-  "use strict";
-  var i;
-  // Draw the background bar
-  this.drawable.clear();
-  this.drawable.beginFill(0x000000);
-  this.drawable.drawRect(0, 0, this.supply * this.width / this.maxEnergy, this.height);
-  this.drawable.endFill();
-  // Draw the minor unit bars
-  for (i = 0; i < this.supplyRounded; i++) {
-    this.drawable.beginFill(0x666666);
-    this.drawable.drawRect(i * this.width / this.maxEnergy, 0, this.width / this.maxEnergy - this.gap, this.height);
-    this.drawable.endFill();
-  }
-  // Draw the demand line
-  this.drawable.beginFill(0xFF0000);
-  this.drawable.drawRect(this.demand * this.width / this.maxEnergy, -this.demandHeight, this.demandWidth, this.height + 2 * this.demandHeight);
-  this.drawable.endFill();
+module.exports.prototype.update = function() {
+  this._foregroundMask.clear();
+  this._foregroundMask.beginFill();
+  this._foregroundMask.drawRect(0, 0, xPositionForValue.call(this, this.supply), this._background.height);
+  this._foregroundMask.endFill();
+
+  this._needle.position.x = xPositionForValue.call(this, this.demand);
 };
 
 });
@@ -10419,7 +10443,46 @@ module.exports = {
 
 });
 
-;require.register("data/spritesheets/outerContractLineDotsSpritesheet", function(exports, require, module) {
+;require.register("data/spritesheets/meterSpritesheet", function(exports, require, module) {
+module.exports = {
+  "frames": [
+    {
+      "filename": "foreground",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 694,
+        "h": 68
+      }
+    },
+    {
+      "filename": "background",
+      "frame": {
+        "x": 0,
+        "y": 68,
+        "w": 694,
+        "h": 68
+      }
+    },
+    {
+      "filename": "needle",
+      "frame": {
+        "x": 695,
+        "y": 0,
+        "w": 26,
+        "h": 45
+      }
+    },
+  ],
+  // The left and right edges of the leftmost and rightmost yellow boxes, respectively. Used to
+  // compute the clipping mask for the foreground image.
+  "leftEdge": 10,
+  "rightEdge": 684
+};
+
+});
+
+require.register("data/spritesheets/outerContractLineDotsSpritesheet", function(exports, require, module) {
 ﻿module.exports = {"frames": [
 
 {
@@ -13266,9 +13329,9 @@ module.exports = function (gameState, stage) {
   this.statusText.position.set(400, 10);
   this.container.addChild(this.statusText);
 
-  this.totalInputBar = new IOBar(746, 56, this.gameState.MAX_ENERGY);
+  this.totalInputBar = new IOBar(this.gameState.MAX_ENERGY);
   this.container.addChild(this.totalInputBar.drawable);
-  this.totalInputBar.drawable.position.set(11, 900);
+  this.totalInputBar.drawable.position.set(37, 917);
 
   this.inputTypes = new PIXI.DisplayObjectContainer();
   this.container.addChild(this.inputTypes);
