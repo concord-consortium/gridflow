@@ -25,7 +25,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 5,
           // random starts at 3, and each update, has variation added or subracted from it.
@@ -41,14 +41,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 2,
           variation: 0.2,
           maxVariation: 1
         },
         {
-          name: "Solar",
+          name: "solar",
           type: "cycle",
           amount: 2,
           // cycle is computed the amount + cos(time) * variation.
@@ -60,14 +60,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "random",
           amount: 2,
           variation: 0.1,
           maxVariation: 1
         },
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 3,
           variation: 0.2,
@@ -80,14 +80,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "random",
           amount: 1,
           variation: 0.02,
           maxVariation: 1
         },
         {
-          name: "Solar",
+          name: "solar",
           type: "cycle",
           amount: 2,
           variation: 2

@@ -26,7 +26,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "fixed",
           amount: 3
         }
@@ -38,7 +38,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "fixed",
           amount: 5
         }
@@ -48,7 +48,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "fixed",
           amount: 6
         }
@@ -59,7 +59,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "fixed",
           amount: 2
         }

@@ -62,15 +62,15 @@ module.exports.prototype.update = function () {
   /*for (i = 0; i < this.gameState.MAX_CITIES; i++) {
     var supply = this.gameState.globals.supply[i];
     if (supply[0] != undefined) {
-      // Wind
+      // wind
       supply[0] = this.gameState.globals.supply[i][0] * 0.8 + this.baseSupply[i][0] * 0.2 + 2 * Math.random() - 1;
     }
     if (supply[1] != undefined) {
-      // Solar
+      // solar
       supply[1] = this.baseSupply[i][1] * (cycle * 0.75 + 0.75);
     }
     if (supply[2] != undefined) {
-      // Fossil
+      // fossil
       supply[2] = this.gameState.globals.supply[i][2] * 0.9 + this.baseSupply[i][2] * 0.1 + Math.random() * 0.4 - 0.2;
     }
     this.gameState.globals.demand[i] = this.baseDemand[i] + cycle + 0.5 * elapsed / this.gameState.DAY_LENGTH;

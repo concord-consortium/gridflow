@@ -14,7 +14,7 @@ module.exports = function () {
   // Leveling (host only)
   // Set this to your desired start level for easy development
   this.level = 0;
-  this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3"), require("levels/Level4")];
+  this.levels = [/*require("levels/Level1"),*/ require("levels/Level2"), require("levels/Level3"), require("levels/Level4")];
   // Joining
   this.uid = (Math.random() + Date.now()).toString();
   this.islandName = "";
@@ -48,19 +48,9 @@ module.exports = function () {
   this.BLACKOUT_VIBRATION = 50;
   this.BLACKOUT_BLINK = 400;
   this.ENERGY_SOURCE_NAMES = [
-    "Wind",
-    "Solar",
-    "Fossil"
-  ];
-  this.ENERGY_SOURCE_COLORS = [
-    0x58a581,
-    0x585ea5,
-    0x8d8d8d
-  ];
-  this.ENERGY_SOURCE_ICONS = [
-    new PIXI.Texture.fromImage("images/SourceWind.png"),
-    new PIXI.Texture.fromImage("images/SourceSolar.png"),
-    new PIXI.Texture.fromImage("images/SourceFossil.png")
+    "wind",
+    "solar",
+    "fossil"
   ];
   this.CITY_COLORS = [
     0xffa701,

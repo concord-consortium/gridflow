@@ -10,6 +10,7 @@ var IOBar = require("components/IOBar"),
   Utils = require("core/Utils"),
   CityIcon = require("components/CityIcon"),
   ContractLine = require("components/ContractLine"),
+  EnergySourceIcon = require('components/EnergySourceIcon'),
   addCityButtonListener, reset;
 
 var background = PIXI.Sprite.fromImage("images/background-day.png");
@@ -22,6 +23,12 @@ var OTHER_CITY_Y = [116, 116, 116];
 
 var CONTRACT_LINE_X = [310, 479, 812];
 var CONTRACT_LINE_Y = [204, 204, 204];
+
+var ENERGY_SOURCE_OFFSET = {
+  fossil: { x: 162, y: 589 },
+  wind:   { x: 330, y: 783 },
+  solar:  { x: 511, y: 660 }
+};
 
 module.exports = function (gameState, stage) {
   var i, cityIcon, line, lineIndex;
@@ -48,9 +55,6 @@ module.exports = function (gameState, stage) {
   this.container.addChild(this.totalInputBar.drawable);
   this.totalInputBar.drawable.position.set(37, 917);
 
-  this.inputTypes = new PIXI.DisplayObjectContainer();
-  this.container.addChild(this.inputTypes);
-  this.inputTypes.position.set(9, 896);
   //  this.loseButton = new PIXI.Text("Insta-lose", {
   //    font: "normal 70pt Arial",
   //    fill: "#f00"
@@ -98,6 +102,18 @@ module.exports = function (gameState, stage) {
   this.cityIcon.drawable.position.set(PLAYER_CITY_X, PLAYER_CITY_Y);
   this.cityIcon.drawable.visible = true;
   this.container.addChild(this.cityIcon.drawable);
+
+  this.energySourceIcons = {};
+
+  // Energy source icons go in front of city icons
+  this.gameState.ENERGY_SOURCE_NAMES.forEach(function(type) {
+    var drawable;
+    this.energySourceIcons[type] = new EnergySourceIcon(type);
+    drawable = this.energySourceIcons[type].drawable;
+    this.container.addChild(drawable);
+    drawable.x = ENERGY_SOURCE_OFFSET[type].x;
+    drawable.y = ENERGY_SOURCE_OFFSET[type].y;
+  }.bind(this));
 };
 
 // Renders the scene
@@ -162,25 +178,20 @@ module.exports.prototype.render = function () {
     // City color!
     this.cityIcon.cityIndex = this.gameState.cityId;
     player = this.gameState.globals.currentLevel.players[this.gameState.cityId];
-    // Update source type text
-    // Shrink or grow the inputTypes children to match the current number of input types
-    while (this.inputTypes.children.length > player.supply.length) {
-      this.inputTypes.removeChild(this.inputTypes.children[this.inputTypes.children.length - 1]);
-    }
-    for (i = 0; i < player.supply.length; i++) {
-      supplyIndex = this.gameState.ENERGY_SOURCE_NAMES.indexOf(player.supply[i].name);
-      if (supplyIndex >= 0) {
-        if (i >= this.inputTypes.children.length) {
-          this.inputTypes.addChild(icon = new PIXI.Sprite(this.gameState.ENERGY_SOURCE_ICONS[supplyIndex]))
-        } else {
-          icon = this.inputTypes.children[i];
-          icon.texture = this.gameState.ENERGY_SOURCE_ICONS[supplyIndex];
-        }
-        icon.tint = this.gameState.ENERGY_SOURCE_COLORS[supplyIndex];
-        icon.position.x = 135 * i;
-      }
-    }
+
+    // Update energy source icons (update visibility, and animate)
+    var supplyTypes = _.pluck(player.supply, 'name');
+    Object.keys(this.energySourceIcons).forEach(function(type) {
+      var esi = this.energySourceIcons[type];
+      esi.visible = supplyTypes.indexOf(esi.type) >= 0;
+    }.bind(this));
   }
+
+  // Every animation step, update energySourceIcons
+  Object.keys(this.energySourceIcons).forEach(function(type) {
+    this.energySourceIcons[type].update();
+  }.bind(this));
+
   // Update city icons and graphs
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
     city = i >= this.gameState.cityId ? i + 1 : i;
