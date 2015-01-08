@@ -14,7 +14,7 @@ module.exports = function () {
   // Leveling (host only)
   // Set this to your desired start level for easy development
   this.level = 0;
-  this.levels = [/*require("levels/Level1"),*/ require("levels/Level2"), require("levels/Level3"), require("levels/Level4")];
+  this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3"), require("levels/Level4")];
   // Joining
   this.uid = (Math.random() + Date.now()).toString();
   this.islandName = "";
