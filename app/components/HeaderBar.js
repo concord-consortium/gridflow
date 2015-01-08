@@ -5,8 +5,6 @@
  */
 'use strict';
 
-//var _ = require('lodash');
-
 /**
              READY?     START >>
   Level 1    READY!    4 Players
