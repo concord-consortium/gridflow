@@ -7325,6 +7325,116 @@ module.exports.prototype.update = function() {
 
 });
 
+require.register("components/EnergySourceIcon", function(exports, require, module) {
+/**
+ * EnergySourceIcon.js
+ * Displays an energy source (wind/solar/fossil) below the player's city
+ */
+'use strict';
+
+var baseTexture = new PIXI.BaseTexture.fromImage('images/energySourcesSpritesheet.png');
+var baseSpritesheetData = require('data/spritesheets/energySourcesSpritesheet');
+
+var generatorTextures = {
+  fossil: new PIXI.BaseTexture.fromImage('images/coalPlantSpritesheet.png'),
+  wind:   new PIXI.BaseTexture.fromImage('images/windTurbineSpritesheet.png'),
+  solar:  new PIXI.BaseTexture.fromImage('images/solarPanelSpritesheet.png')
+};
+
+var generatorSpritesheetData = {
+  fossil: require('data/spritesheets/coalPlantSpritesheet'),
+  wind:   require('data/spritesheets/windTurbineSpritesheet'),
+  solar:  require('data/spritesheets/solarPanelSpritesheet')
+};
+
+// relative location of "generator" (coal plant, wind turbine, etc) sprite
+var GENERATOR_OFFSET = {
+  fossil: [{ x: 0, y: 16 }],
+  wind:   [{ x: 20, y: -55 }],
+  solar:  [{ x: 25, y: 10 }, { x: 25, y: -14 }]
+};
+
+// relative location of "base" (yellow "platform" under city) sprite
+var BASE_OFFSET = {
+  fossil: { x: 68 - 50, y: 95 + (150 - 85) - 89 },
+  wind:   { x: 0, y: 0 },
+  solar:  { x: 0, y: 0 }
+};
+
+var DELAY_BETWEEN_FRAMES = {
+  fossil: 2,
+  wind:   3,
+  solar:  3
+};
+
+function updateGeneratorTexture() {
+  /* jshint -W040*/
+  var texinfo = this.generatorTextureInfo[this.generatorTextureIndex];
+
+  this.generatorSprites.forEach(function(generatorSprite, index) {
+    generatorSprite.setTexture(texinfo.texture);
+    generatorSprite.x = GENERATOR_OFFSET[this.type][index].x + texinfo.offset.x;
+    generatorSprite.y = GENERATOR_OFFSET[this.type][index].y + texinfo.offset.y;
+  }.bind(this));
+
+  /* jshint +W040*/
+}
+
+module.exports = function(type) {
+  var frame = _.where(baseSpritesheetData.frames, { filename: type })[0].frame;
+  var texture = new PIXI.Texture(baseTexture, new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h));
+  var generatorTexture = generatorTextures[type];
+
+  this.type = type;
+  this.visible = false;
+
+  this.drawable = new PIXI.DisplayObjectContainer();
+  this.baseSprite = new PIXI.Sprite(texture);
+  this.baseSprite.x = BASE_OFFSET[this.type].x;
+  this.baseSprite.y = BASE_OFFSET[this.type].y;
+
+  this.drawable.addChild(this.baseSprite);
+
+  this.generatorTextureInfo = generatorSpritesheetData[this.type].frames.map(function(obj) {
+    var frame = obj.frame;
+    return {
+      texture: new PIXI.Texture(generatorTexture, new PIXI.Rectangle(frame.x, frame.y, frame.w, frame.h)),
+      offset: obj.spriteSourceSize
+    };
+  });
+
+  this.generatorSprites = GENERATOR_OFFSET[type].map(function() {
+    return new PIXI.Sprite(this.generatorTextureInfo[0].texture);
+  }.bind(this));
+
+  this.generatorTextureIndex = 0;
+  updateGeneratorTexture.call(this);
+
+  this.generatorSprites.forEach(function(sprite) {
+    this.drawable.addChild(sprite);
+  }.bind(this));
+
+  this.delayCounter = 0;
+
+  this.update();
+};
+
+module.exports.prototype.update = function() {
+  this.drawable.visible = this.visible;
+
+  if (this.visible) {
+    if (this.delayCounter === 0) {
+      updateGeneratorTexture.call(this);
+      this.generatorTextureIndex = (this.generatorTextureIndex + 1) % this.generatorTextureInfo.length;
+    }
+    this.delayCounter = (this.delayCounter + 1) % DELAY_BETWEEN_FRAMES[this.type];
+  } else {
+    this.generatorTextureIndex = 0;
+  }
+};
+
+});
+
 require.register("components/HeaderBar", function(exports, require, module) {
 /**
  * HeaderBar.js
@@ -7332,8 +7442,6 @@ require.register("components/HeaderBar", function(exports, require, module) {
  * for e.g., the next level.
  */
 'use strict';
-
-//var _ = require('lodash');
 
 /**
              READY?     START >>
@@ -7614,17 +7722,17 @@ module.exports = function(maxValue) {
 
   this.maxValue = maxValue;
 
+  // graphical elements
   this.drawable = new PIXI.DisplayObjectContainer();
-
   this._background = new PIXI.Sprite(getTexture('background'));
-
   this._foreground = new PIXI.Sprite(getTexture('foreground'));
   this._foregroundMask = new PIXI.Graphics();
-  this._foreground.mask = this._foregroundMask;
-
-  // the needle
   this._needle = new PIXI.Sprite(getTexture('needle'));
 
+  // foreground (dark yellow) will be clipped to indicate available supply
+  this._foreground.mask = this._foregroundMask;
+
+  // center of needle indicates demand; bottom of needle "rests" on bottom of meter
   this._needle.anchor.x = 0.5;
   this._needle.anchor.y = 1;
   this._needle.y = this._background.height;
@@ -7640,6 +7748,8 @@ module.exports = function(maxValue) {
  * Updates the graphics object
  */
 module.exports.prototype.update = function() {
+
+  // this clips the foreground element
   this._foregroundMask.clear();
   this._foregroundMask.beginFill();
   this._foregroundMask.drawRect(0, 0, xPositionForValue.call(this, this.supply), this._background.height);
@@ -7750,15 +7860,15 @@ module.exports.prototype.update = function () {
   /*for (i = 0; i < this.gameState.MAX_CITIES; i++) {
     var supply = this.gameState.globals.supply[i];
     if (supply[0] != undefined) {
-      // Wind
+      // wind
       supply[0] = this.gameState.globals.supply[i][0] * 0.8 + this.baseSupply[i][0] * 0.2 + 2 * Math.random() - 1;
     }
     if (supply[1] != undefined) {
-      // Solar
+      // solar
       supply[1] = this.baseSupply[i][1] * (cycle * 0.75 + 0.75);
     }
     if (supply[2] != undefined) {
-      // Fossil
+      // fossil
       supply[2] = this.gameState.globals.supply[i][2] * 0.9 + this.baseSupply[i][2] * 0.1 + Math.random() * 0.4 - 0.2;
     }
     this.gameState.globals.demand[i] = this.baseDemand[i] + cycle + 0.5 * elapsed / this.gameState.DAY_LENGTH;
@@ -7928,7 +8038,7 @@ module.exports = function () {
   // Leveling (host only)
   // Set this to your desired start level for easy development
   this.level = 0;
-  this.levels = [require("levels/Level1"), require("levels/Level2"), require("levels/Level3"), require("levels/Level4")];
+  this.levels = [/*require("levels/Level1"),*/ require("levels/Level2"), require("levels/Level3"), require("levels/Level4")];
   // Joining
   this.uid = (Math.random() + Date.now()).toString();
   this.islandName = "";
@@ -7962,19 +8072,9 @@ module.exports = function () {
   this.BLACKOUT_VIBRATION = 50;
   this.BLACKOUT_BLINK = 400;
   this.ENERGY_SOURCE_NAMES = [
-    "Wind",
-    "Solar",
-    "Fossil"
-  ];
-  this.ENERGY_SOURCE_COLORS = [
-    0x58a581,
-    0x585ea5,
-    0x8d8d8d
-  ];
-  this.ENERGY_SOURCE_ICONS = [
-    new PIXI.Texture.fromImage("images/SourceWind.png"),
-    new PIXI.Texture.fromImage("images/SourceSolar.png"),
-    new PIXI.Texture.fromImage("images/SourceFossil.png")
+    "wind",
+    "solar",
+    "fossil"
   ];
   this.CITY_COLORS = [
     0xffa701,
@@ -9178,6 +9278,40 @@ module.exports = {
 }
 }
 
+});
+
+;require.register("data/spritesheets/energySourcesSpritesheet", function(exports, require, module) {
+module.exports = {
+  "frames": [
+    {
+      "filename": "fossil",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 77,
+        "h": 89
+      }
+    },
+    {
+      "filename": "wind",
+      "frame": {
+        "x": 100,
+        "y": 0,
+        "w": 110,
+        "h": 90
+      }
+    },
+    {
+      "filename": "solar",
+      "frame": {
+        "x": 250,
+        "y": 0,
+        "w": 77,
+        "h": 89
+      }
+    }
+  ]
+}
 });
 
 ;require.register("data/spritesheets/innerContractLineDotsSpritesheet", function(exports, require, module) {
@@ -12830,7 +12964,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "fixed",
           amount: 3
         }
@@ -12842,7 +12976,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "fixed",
           amount: 5
         }
@@ -12852,7 +12986,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "fixed",
           amount: 6
         }
@@ -12863,7 +12997,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "fixed",
           amount: 2
         }
@@ -12903,7 +13037,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 5,
           // random starts at 3, and each update, has variation added or subracted from it.
@@ -12919,14 +13053,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 2,
           variation: 0.2,
           maxVariation: 1
         },
         {
-          name: "Solar",
+          name: "solar",
           type: "cycle",
           amount: 2,
           // cycle is computed the amount + cos(time) * variation.
@@ -12938,14 +13072,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "random",
           amount: 2,
           variation: 0.1,
           maxVariation: 1
         },
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 3,
           variation: 0.2,
@@ -12958,14 +13092,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "random",
           amount: 1,
           variation: 0.02,
           maxVariation: 1
         },
         {
-          name: "Solar",
+          name: "solar",
           type: "cycle",
           amount: 2,
           variation: 2
@@ -13006,7 +13140,7 @@ module.exports = {
     {
       supply: [
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 5,
           // random starts at 3, and each update, has variation added or subracted from it.
@@ -13022,14 +13156,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 2,
           variation: 0.2,
           maxVariation: 1
         },
         {
-          name: "Solar",
+          name: "solar",
           type: "cycle",
           amount: 2,
           // cycle is computed the amount + cos(time) * variation.
@@ -13041,14 +13175,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "random",
           amount: 2,
           variation: 0.1,
           maxVariation: 1
         },
         {
-          name: "Wind",
+          name: "wind",
           type: "random",
           amount: 3,
           variation: 0.2,
@@ -13061,14 +13195,14 @@ module.exports = {
     {
       supply: [
         {
-          name: "Fossil",
+          name: "fossil",
           type: "random",
           amount: 1,
           variation: 0.02,
           maxVariation: 1
         },
         {
-          name: "Solar",
+          name: "solar",
           type: "cycle",
           amount: 2,
           variation: 2
@@ -13295,6 +13429,7 @@ var IOBar = require("components/IOBar"),
   Utils = require("core/Utils"),
   CityIcon = require("components/CityIcon"),
   ContractLine = require("components/ContractLine"),
+  EnergySourceIcon = require('components/EnergySourceIcon'),
   addCityButtonListener, reset;
 
 var background = PIXI.Sprite.fromImage("images/background-day.png");
@@ -13307,6 +13442,12 @@ var OTHER_CITY_Y = [116, 116, 116];
 
 var CONTRACT_LINE_X = [310, 479, 812];
 var CONTRACT_LINE_Y = [204, 204, 204];
+
+var ENERGY_SOURCE_OFFSET = {
+  fossil: { x: 162, y: 589 },
+  wind:   { x: 330, y: 783 },
+  solar:  { x: 511, y: 660 }
+};
 
 module.exports = function (gameState, stage) {
   var i, cityIcon, line, lineIndex;
@@ -13333,9 +13474,6 @@ module.exports = function (gameState, stage) {
   this.container.addChild(this.totalInputBar.drawable);
   this.totalInputBar.drawable.position.set(37, 917);
 
-  this.inputTypes = new PIXI.DisplayObjectContainer();
-  this.container.addChild(this.inputTypes);
-  this.inputTypes.position.set(9, 896);
   //  this.loseButton = new PIXI.Text("Insta-lose", {
   //    font: "normal 70pt Arial",
   //    fill: "#f00"
@@ -13383,6 +13521,18 @@ module.exports = function (gameState, stage) {
   this.cityIcon.drawable.position.set(PLAYER_CITY_X, PLAYER_CITY_Y);
   this.cityIcon.drawable.visible = true;
   this.container.addChild(this.cityIcon.drawable);
+
+  this.energySourceIcons = {};
+
+  // Energy source icons go in front of city icons
+  this.gameState.ENERGY_SOURCE_NAMES.forEach(function(type) {
+    var drawable;
+    this.energySourceIcons[type] = new EnergySourceIcon(type);
+    drawable = this.energySourceIcons[type].drawable;
+    this.container.addChild(drawable);
+    drawable.x = ENERGY_SOURCE_OFFSET[type].x;
+    drawable.y = ENERGY_SOURCE_OFFSET[type].y;
+  }.bind(this));
 };
 
 // Renders the scene
@@ -13447,25 +13597,20 @@ module.exports.prototype.render = function () {
     // City color!
     this.cityIcon.cityIndex = this.gameState.cityId;
     player = this.gameState.globals.currentLevel.players[this.gameState.cityId];
-    // Update source type text
-    // Shrink or grow the inputTypes children to match the current number of input types
-    while (this.inputTypes.children.length > player.supply.length) {
-      this.inputTypes.removeChild(this.inputTypes.children[this.inputTypes.children.length - 1]);
-    }
-    for (i = 0; i < player.supply.length; i++) {
-      supplyIndex = this.gameState.ENERGY_SOURCE_NAMES.indexOf(player.supply[i].name);
-      if (supplyIndex >= 0) {
-        if (i >= this.inputTypes.children.length) {
-          this.inputTypes.addChild(icon = new PIXI.Sprite(this.gameState.ENERGY_SOURCE_ICONS[supplyIndex]))
-        } else {
-          icon = this.inputTypes.children[i];
-          icon.texture = this.gameState.ENERGY_SOURCE_ICONS[supplyIndex];
-        }
-        icon.tint = this.gameState.ENERGY_SOURCE_COLORS[supplyIndex];
-        icon.position.x = 135 * i;
-      }
-    }
+
+    // Update energy source icons (update visibility, and animate)
+    var supplyTypes = _.pluck(player.supply, 'name');
+    Object.keys(this.energySourceIcons).forEach(function(type) {
+      var esi = this.energySourceIcons[type];
+      esi.visible = supplyTypes.indexOf(esi.type) >= 0;
+    }.bind(this));
   }
+
+  // Every animation step, update energySourceIcons
+  Object.keys(this.energySourceIcons).forEach(function(type) {
+    this.energySourceIcons[type].update();
+  }.bind(this));
+
   // Update city icons and graphs
   for (i = 0; i < this.gameState.MAX_CITIES - 1; i++) {
     city = i >= this.gameState.cityId ? i + 1 : i;
@@ -13502,7 +13647,6 @@ module.exports.prototype.render = function () {
   // Yum. Gotta update all those bars.
   this.totalInputBar.demand = Utils.lerp(this.totalInputBar.demand, this.flow.getTotalDemand(), this.gameState.ANIMATION_RATE);
   this.totalInputBar.supply = Utils.lerp(this.totalInputBar.supply, this.flow.supplySum, this.gameState.ANIMATION_RATE);
-  this.totalInputBar.supplyRounded = Math.min(this.flow.supplySum, Math.floor(this.totalInputBar.supply + 0.1));
   this.totalInputBar.update();
 
   // Handle that blackout
