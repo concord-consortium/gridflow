@@ -48,8 +48,8 @@ var frameIndicesFor = {
 };
 
 var dotOffsetFor = {
-  outer: { x: 12, y: 85 },
-  inner: { x: 14, y: 101 }
+  outer: { x: 2, y: 82 },
+  inner: { x: 14, y: 97 }
 };
 
 var ANIMATION_FPS = 24;
