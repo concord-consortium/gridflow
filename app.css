@@ -8,9 +8,25 @@ body {
   overflow: hidden;
   text-align: center;
   background-color: black;
+  height: 100%;
 }
 canvas {
   height: 100%;
+  position: relative;
+}
+
+/* Handle portrait orientation in devices with > 4:3 aspect ratio)
+   (orientation: portrait would work, too, but the below is also
+    meaningful in desktop browsers and/or iframes */
+@media only screen and (max-aspect-ratio: 3/4) {
+  canvas {
+    height: auto;
+    width: 100%;
+    /* put canvas' top at 50% of the parent's height */
+    top: 50%;
+    /* ... and move canvas up by 50% of its own height */
+    transform: translateY(-50%);
+  }
 }
 
 
