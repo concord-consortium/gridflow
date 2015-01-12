@@ -19,7 +19,9 @@ function setCountdownStep(step) {
 }
 
 module.exports = function (gameState, stage) {
-  var background = new PIXI.Sprite.fromImage("images/background-day.png");
+  var background = new PIXI.Sprite.fromImage('images/background-grey.png');
+  this.introMessage = new PIXI.Sprite.fromImage('images/intro-message.png');
+
   background.position.x = background.position.y = 0;
 
   this.gameState = gameState;
@@ -27,6 +29,7 @@ module.exports = function (gameState, stage) {
   this.container = new PIXI.DisplayObjectContainer();
   this.container.visible = false;
   this.container.addChild(background);
+  this.container.addChild(this.introMessage);
   stage.addChild(this.container);
 
   this.headerBar = new HeaderBar(0, 0, 768, 105);
@@ -54,6 +57,8 @@ module.exports.prototype.render = function () {
   var ready = 0;
   var total = this.gameState.countCities();
   var i;
+
+  this.introMessage.visible = false;
 
   // Host decides when we're ready to start playing
   if (this.gameState.host) {
@@ -90,6 +95,7 @@ module.exports.prototype.render = function () {
   // show connecting message?
   if (this.gameState.cityId == null || this.gameState.globals == null) {
     this.headerBar.show('connecting');
+    this.introMessage.visible = true;
     return;
   }
 
@@ -117,4 +123,5 @@ module.exports.prototype.render = function () {
 
   // wait
   this.headerBar.show('waiting');
+  this.introMessage.visible = true;
 };
