@@ -35,7 +35,7 @@ module.exports = function () {
   this.dynamics = new Dynamics(this);
   this.levelTimer = new LevelTimer(this);
   // Constants
-  this.FIREBASE_URL = "https://popping-fire-8949.firebaseio.com/";
+  this.FIREBASE_URL = "https://classic-gridflow.firebaseio.com/";
   this.MAX_CITIES = 4;
   this.ANIMATION_RATE = 0.05;
   // Time is all in milliseconds
