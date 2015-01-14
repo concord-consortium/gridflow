@@ -7387,6 +7387,7 @@ module.exports = function(type) {
 
   this.type = type;
   this.visible = false;
+  this.stopped = false;
 
   this.drawable = new PIXI.DisplayObjectContainer();
   this.baseSprite = new PIXI.Sprite(texture);
@@ -7422,14 +7423,15 @@ module.exports = function(type) {
 module.exports.prototype.update = function() {
   this.drawable.visible = this.visible;
 
-  if (this.visible) {
+  if ( ! this.visible || this.stopped) {
+    this.generatorTextureIndex = 0;
+    updateGeneratorTexture.call(this);
+  } else {
     if (this.delayCounter === 0) {
       updateGeneratorTexture.call(this);
       this.generatorTextureIndex = (this.generatorTextureIndex + 1) % this.generatorTextureInfo.length;
     }
     this.delayCounter = (this.delayCounter + 1) % DELAY_BETWEEN_FRAMES[this.type];
-  } else {
-    this.generatorTextureIndex = 0;
   }
 };
 
@@ -7756,41 +7758,6 @@ module.exports.prototype.update = function() {
   this._foregroundMask.endFill();
 
   this._needle.position.x = xPositionForValue.call(this, this.demand);
-};
-
-});
-
-require.register("components/VisualClock", function(exports, require, module) {
-/**
- * VisualClock.js
- * Visualizes time in a handy banner
- * (Typed with Dvorak!)
- */
-var Utils = require("core/Utils");
-
-module.exports = function (width, height) {
-  "use strict";
-  this.width = width || 0;
-  this.height = height || 0;
-  this.day = 0;
-  this.drawable = new PIXI.Graphics();
-  this.update();
-};
-/**
- * Updates the graphics object
- */
-module.exports.prototype.update = function () {
-  "use strict";
-  this.drawable.clear();
-  this.drawable.beginFill(
-    Utils.lerpColor(
-      // Day/night color
-      Utils.lerpColor(0x96c7ff, 0x114083,
-        Utils.clamp(0.5 + Math.cos(2 * Math.PI * this.day), 0, 1)),
-      // Sunset color
-      0xff6d1e, Utils.clamp(-3 - 3.5 * Math.sin(Math.PI / 2 + 4 * Math.PI * this.day), 0, 1)));
-  this.drawable.drawRect(0, 0, this.width, this.height);
-  this.drawable.endFill();
 };
 
 });
@@ -8295,6 +8262,14 @@ module.exports.prototype.getDay = function () {
     return this.gameState.globals.currentLevel.startTime;
   }
   return this.gameState.globals.currentLevel.startTime + (this.useCache === true ? this.elapsed : this.getElapsed()) / this.gameState.globals.currentLevel.dayLength;
+};
+
+// Hardcode 12 hour day (daytime == 8am -- 8pm)
+module.exports.prototype.isDaytime = function() {
+  'use strict';
+  var day = this.getDay();
+  var timeOfDay = day - Math.floor(day);
+  return 0.25 < timeOfDay && timeOfDay <= 0.75;
 };
 
 });
@@ -13252,11 +13227,6 @@ WebFont.load({
   inactive: start
 });
 
-// temporarily add background icon
-var background = PIXI.Sprite.fromImage("images/background-day.png");
-stages.join.background = background;
-stages.play.background = background;
-
 // Set everything up
 gameState.connect(window.location.hash.replace(/[^a-z]+/g, "") || "default");
 gameState.currentStage = stages.join;
@@ -13442,7 +13412,6 @@ require.register("scenes/Play", function(exports, require, module) {
 'use strict';
 
 var IOBar = require("components/IOBar"),
-  VisualClock = require("components/VisualClock"),
   Flow = require("core/Flow"),
   Utils = require("core/Utils"),
   CityIcon = require("components/CityIcon"),
@@ -13450,8 +13419,8 @@ var IOBar = require("components/IOBar"),
   EnergySourceIcon = require('components/EnergySourceIcon'),
   addCityButtonListener, reset;
 
-var background = PIXI.Sprite.fromImage("images/background-day.png");
-
+var backgroundDay = PIXI.Texture.fromImage("images/background-day.png");
+var backgroundNight = PIXI.Texture.fromImage("images/background-night.png");
 
 var PLAYER_CITY_X = 236;
 var PLAYER_CITY_Y = 466;
@@ -13476,11 +13445,10 @@ module.exports = function (gameState, stage) {
 
   this.container = new PIXI.DisplayObjectContainer();
   this.container.visible = false;
-  this.container.addChild(background);
-  stage.addChild(this.container);
+  this.background = new PIXI.Sprite(backgroundDay);
+  this.container.addChild(this.background);
 
-  this.visualClock = new VisualClock(768, 800);
-  //this.container.addChild(this.visualClock.drawable);
+  stage.addChild(this.container);
 
   this.statusText = new PIXI.Text("", {
     font: "normal 30pt Arial"
@@ -13624,9 +13592,17 @@ module.exports.prototype.render = function () {
     }.bind(this));
   }
 
+  // Update day progression
+  this.isDaytime = this.gameState.levelTimer.isDaytime();
+  setBackground.call(this);
+
   // Every animation step, update energySourceIcons
   Object.keys(this.energySourceIcons).forEach(function(type) {
+    if (type == 'solar') {
+      this.energySourceIcons[type].stopped = ! this.isDaytime;
+    }
     this.energySourceIcons[type].update();
+
   }.bind(this));
 
   // Update city icons and graphs
@@ -13702,13 +13678,15 @@ module.exports.prototype.render = function () {
     this.blackoutImminent = null;
   }
   this.cityIcon.update();
-  // Update day progression
-  dayProgression = this.gameState.levelTimer.getDay();
-  // this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24 + 11) % 12 + 1) + ":00 " + (dayProgression % 1 < 0.5 ? "AM" : "PM"));
-  this.visualClock.day = dayProgression;
-  this.visualClock.update();
   this.gameState.levelTimer.unCache();
 };
+
+function setBackground(dayProgression) {
+  // jshint -W040
+  this.background.setTexture(this.isDaytime ? backgroundDay : backgroundNight);
+  // jshint +W040
+}
+
 addCityButtonListener = function (cityButton, i) {
   var that = this;
   cityButton.click =
