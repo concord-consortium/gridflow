@@ -1,0 +1,9 @@
+{
+  "firebase": "gridflow",
+  "public": "control-page",
+  "ignore": [
+    "firebase.json",
+    "**/.*",
+    "**/node_modules/**"
+  ]
+}

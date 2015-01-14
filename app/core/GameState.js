@@ -35,7 +35,7 @@ module.exports = function () {
   this.dynamics = new Dynamics(this);
   this.levelTimer = new LevelTimer(this);
   // Constants
-  this.FIREBASE_URL = "https://torid-torch-8984.firebaseio.com/";
+  this.FIREBASE_URL = "https://gridflow.firebaseio.com/";
   this.MAX_CITIES = 4;
   this.ANIMATION_RATE = 0.05;
   // Time is all in milliseconds
@@ -62,9 +62,20 @@ module.exports = function () {
 // Connect to an island
 module.exports.prototype.connect = function (islandName) {
   "use strict";
+  var firebase = new Firebase(this.FIREBASE_URL + islandName + '/session');
   this.islandName = islandName;
-  this.firebase = new Firebase(this.FIREBASE_URL + this.islandName);
-  this.reconnect();
+
+  firebase.transaction(function(session) {
+    // make sure session number is populated -- but don't increment it
+    return session || 1;
+  }, function(err, committed, session) {
+    if (err) {
+      alert("Couldn't connect; try again!");
+      return;
+    }
+    this.firebase = new Firebase(this.FIREBASE_URL + this.islandName + '/sessions/' + session.val());
+    this.reconnect();
+  }.bind(this));
 };
 // Connects to or creates an existing session.
 module.exports.prototype.reconnect = function () {
