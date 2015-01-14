@@ -66,3 +66,16 @@ animate = function () {
 function start() {
   raf(animate);
 }
+
+// mobile safari and classic android browser don't like the vertical-center-with-translate-y-trick
+// (so use js)
+window.addEventListener('load', function() {
+  'use strict';
+
+  function center() {
+    var canvas = document.getElementsByTagName('canvas')[0];
+    canvas.style.top = ((window.innerHeight - canvas.offsetHeight) / 2) + 'px';
+  }
+  window.addEventListener('resize', center);
+  center();
+});
