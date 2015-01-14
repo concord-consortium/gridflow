@@ -8,8 +8,7 @@ var Utils     = require('core/Utils');
 var HeaderBar = require('components/HeaderBar');
 
 var COUNTDOWN_INTERVAL = 1000;  // ms
-
-
+var CITY_COLORS = ["green", "orange", "blue", "red"];
 
 function setCountdownStep(step) {
   // jshint -W040
@@ -115,7 +114,7 @@ module.exports.prototype.render = function () {
       this.headerBar.show('won');
     } else {
       this.headerBar.show('lost', {
-        centerMessage: { text: "CITY " + (status+1) + " BLACKED OUT!" }
+        centerMessage: { text: CITY_COLORS[globals.status].toUpperCase() + " BLACKED OUT!" }
       });
     }
     return;

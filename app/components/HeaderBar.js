@@ -82,7 +82,7 @@ var CHILD_CONFIGS = {
 
   lost: {
     leftMessage:   { visible: false },
-    centerMessage: { size: MEDIUM, style: 'italic 700', x: 45, y: Y_MEDIUM },
+    centerMessage: { size: MEDIUM, style: 'italic 700', x: 25, y: Y_MEDIUM },
     rightMessage:  { visible: false },
     button:        { text: "RETRY", size: SMALL, style: 'normal 600', x: 85, y: Y_SMALL }
   }
