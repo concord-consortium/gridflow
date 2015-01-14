@@ -22,10 +22,6 @@ canvas {
   canvas {
     height: auto;
     width: 100%;
-    /* put canvas' top at 50% of the parent's height */
-    top: 50%;
-    /* ... and move canvas up by 50% of its own height */
-    transform: translateY(-50%);
   }
 }
 
