@@ -7522,7 +7522,7 @@ var CHILD_CONFIGS = {
 
   lost: {
     leftMessage:   { visible: false },
-    centerMessage: { size: MEDIUM, style: 'italic 700', x: 45, y: Y_MEDIUM },
+    centerMessage: { size: MEDIUM, style: 'italic 700', x: 25, y: Y_MEDIUM },
     rightMessage:  { visible: false },
     button:        { text: "RETRY", size: SMALL, style: 'normal 600', x: 85, y: Y_SMALL }
   }
@@ -13284,8 +13284,7 @@ var Utils     = require('core/Utils');
 var HeaderBar = require('components/HeaderBar');
 
 var COUNTDOWN_INTERVAL = 1000;  // ms
-
-
+var CITY_COLORS = ["green", "orange", "blue", "red"];
 
 function setCountdownStep(step) {
   // jshint -W040
@@ -13391,7 +13390,7 @@ module.exports.prototype.render = function () {
       this.headerBar.show('won');
     } else {
       this.headerBar.show('lost', {
-        centerMessage: { text: "CITY " + (status+1) + " BLACKED OUT!" }
+        centerMessage: { text: CITY_COLORS[globals.status].toUpperCase() + " BLACKED OUT!" }
       });
     }
     return;
