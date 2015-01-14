@@ -59,6 +59,7 @@ module.exports = function(type) {
 
   this.type = type;
   this.visible = false;
+  this.stopped = false;
 
   this.drawable = new PIXI.DisplayObjectContainer();
   this.baseSprite = new PIXI.Sprite(texture);
@@ -94,13 +95,14 @@ module.exports = function(type) {
 module.exports.prototype.update = function() {
   this.drawable.visible = this.visible;
 
-  if (this.visible) {
+  if ( ! this.visible || this.stopped) {
+    this.generatorTextureIndex = 0;
+    updateGeneratorTexture.call(this);
+  } else {
     if (this.delayCounter === 0) {
       updateGeneratorTexture.call(this);
       this.generatorTextureIndex = (this.generatorTextureIndex + 1) % this.generatorTextureInfo.length;
     }
     this.delayCounter = (this.delayCounter + 1) % DELAY_BETWEEN_FRAMES[this.type];
-  } else {
-    this.generatorTextureIndex = 0;
   }
 };

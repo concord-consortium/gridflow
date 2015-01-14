@@ -5,7 +5,6 @@
 'use strict';
 
 var IOBar = require("components/IOBar"),
-  VisualClock = require("components/VisualClock"),
   Flow = require("core/Flow"),
   Utils = require("core/Utils"),
   CityIcon = require("components/CityIcon"),
@@ -13,8 +12,8 @@ var IOBar = require("components/IOBar"),
   EnergySourceIcon = require('components/EnergySourceIcon'),
   addCityButtonListener, reset;
 
-var background = PIXI.Sprite.fromImage("images/background-day.png");
-
+var backgroundDay = PIXI.Texture.fromImage("images/background-day.png");
+var backgroundNight = PIXI.Texture.fromImage("images/background-night.png");
 
 var PLAYER_CITY_X = 236;
 var PLAYER_CITY_Y = 466;
@@ -39,11 +38,10 @@ module.exports = function (gameState, stage) {
 
   this.container = new PIXI.DisplayObjectContainer();
   this.container.visible = false;
-  this.container.addChild(background);
-  stage.addChild(this.container);
+  this.background = new PIXI.Sprite(backgroundDay);
+  this.container.addChild(this.background);
 
-  this.visualClock = new VisualClock(768, 800);
-  //this.container.addChild(this.visualClock.drawable);
+  stage.addChild(this.container);
 
   this.statusText = new PIXI.Text("", {
     font: "normal 30pt Arial"
@@ -187,9 +185,17 @@ module.exports.prototype.render = function () {
     }.bind(this));
   }
 
+  // Update day progression
+  this.isDaytime = this.gameState.levelTimer.isDaytime();
+  setBackground.call(this);
+
   // Every animation step, update energySourceIcons
   Object.keys(this.energySourceIcons).forEach(function(type) {
+    if (type == 'solar') {
+      this.energySourceIcons[type].stopped = ! this.isDaytime;
+    }
     this.energySourceIcons[type].update();
+
   }.bind(this));
 
   // Update city icons and graphs
@@ -265,13 +271,15 @@ module.exports.prototype.render = function () {
     this.blackoutImminent = null;
   }
   this.cityIcon.update();
-  // Update day progression
-  dayProgression = this.gameState.levelTimer.getDay();
-  // this.statusText.setText("Day " + Math.floor(1 + dayProgression) + " - " + (Math.floor(dayProgression * 24 + 11) % 12 + 1) + ":00 " + (dayProgression % 1 < 0.5 ? "AM" : "PM"));
-  this.visualClock.day = dayProgression;
-  this.visualClock.update();
   this.gameState.levelTimer.unCache();
 };
+
+function setBackground(dayProgression) {
+  // jshint -W040
+  this.background.setTexture(this.isDaytime ? backgroundDay : backgroundNight);
+  // jshint +W040
+}
+
 addCityButtonListener = function (cityButton, i) {
   var that = this;
   cityButton.click =

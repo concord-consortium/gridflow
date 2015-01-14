@@ -47,3 +47,11 @@ module.exports.prototype.getDay = function () {
   }
   return this.gameState.globals.currentLevel.startTime + (this.useCache === true ? this.elapsed : this.getElapsed()) / this.gameState.globals.currentLevel.dayLength;
 };
+
+// Hardcode 12 hour day (daytime == 8am -- 8pm)
+module.exports.prototype.isDaytime = function() {
+  'use strict';
+  var day = this.getDay();
+  var timeOfDay = day - Math.floor(day);
+  return 0.25 < timeOfDay && timeOfDay <= 0.75;
+};
